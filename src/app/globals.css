@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f6f9;
+  --foreground: #0f172a;
+  --brand: #183e95;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-brand: var(--brand);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.ant-btn-primary {
+  background: #183e95 !important;
+  box-shadow: 0 4px 14px rgba(24, 62, 149, 0.35);
+}
+
+.ant-btn-primary:hover {
+  background: #1e4bb5 !important;
+}
+
+.ant-pagination-item-active {
+  border-color: #183e95 !important;
+}
+
+.ant-pagination-item-active a {
+  color: #183e95 !important;
+}
+
+.dashboard-sider-menu.ant-menu-dark {
+  background: transparent !important;
+}
+
+.dashboard-sider-menu.ant-menu-dark .ant-menu-item {
+  margin: 4px 8px !important;
+  width: calc(100% - 16px) !important;
+  border-radius: 10px !important;
+}
+
+.dashboard-sider-menu.ant-menu-dark .ant-menu-item-selected {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.dashboard-sider-menu.ant-menu-dark .ant-menu-item-selected .ant-menu-item-icon,
+.dashboard-sider-menu.ant-menu-dark .ant-menu-item-selected .anticon {
+  color: #fbbf24 !important;
+}
+
+.dashboard-sider-menu.ant-menu-dark .ant-menu-item-selected::after {
+  border-inline-end: 3px solid #fbbf24 !important;
+}
+
+.dashboard-sider-menu.ant-menu-dark .ant-menu-item:hover:not(.ant-menu-item-selected) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
 }
