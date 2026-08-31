@@ -9,17 +9,47 @@ import { HomeValueProps } from "@/components/home/HomeValueProps";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
 import { fetchFilterOptions, fetchProperties } from "@/lib/api";
+import type { FilterOptions, PaginatedResponse, Property } from "@/types";
 
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1920&q=80";
 
+export const dynamic = "force-dynamic";
+
+const EMPTY_PROPERTIES: PaginatedResponse<Property> = {
+  count: 0,
+  next: null,
+  previous: null,
+  results: [],
+};
+
+const EMPTY_FILTER_OPTIONS: FilterOptions = {
+  listing_types: [],
+  property_types: [],
+  conditions: [],
+  districts: [],
+  district_choices: [],
+  payment_terms: [],
+  ordering: [],
+  locations: [],
+};
+
 export default async function HomePage() {
-  const [featured, latest, landListings, options] = await Promise.all([
-    fetchProperties({ listing_type: "sell", ordering: "most_viewed", exclude_property_type: "land" }),
-    fetchProperties({ ordering: "newest", exclude_property_type: "land" }),
-    fetchProperties({ property_type: "land", ordering: "newest" }),
-    fetchFilterOptions(),
-  ]);
+  let featured = EMPTY_PROPERTIES;
+  let latest = EMPTY_PROPERTIES;
+  let landListings = EMPTY_PROPERTIES;
+  let options = EMPTY_FILTER_OPTIONS;
+
+  try {
+    [featured, latest, landListings, options] = await Promise.all([
+      fetchProperties({ listing_type: "sell", ordering: "most_viewed", exclude_property_type: "land" }),
+      fetchProperties({ ordering: "newest", exclude_property_type: "land" }),
+      fetchProperties({ property_type: "land", ordering: "newest" }),
+      fetchFilterOptions(),
+    ]);
+  } catch {
+    // API unreachable at build/runtime — render empty sections instead of failing the page.
+  }
 
   const latestProperties = latest.results.slice(0, 8);
   const topProperties = featured.results.slice(0, 8);
