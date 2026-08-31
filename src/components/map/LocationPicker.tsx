@@ -59,6 +59,15 @@ function Recenter({
   return null;
 }
 
+function EnsureMapType({ mapTypeId }: { mapTypeId: string }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!map) return;
+    map.setMapTypeId(mapTypeId);
+  }, [map, mapTypeId]);
+  return null;
+}
+
 function AddressGeocoder({
   searchQuery,
   biasCenter,
@@ -168,7 +177,6 @@ function PickerInner({
       <Map
         defaultCenter={mapCenter}
         defaultZoom={13}
-        defaultMapTypeId="satellite"
         gestureHandling="greedy"
         mapTypeControl={false}
         streetViewControl={false}
@@ -176,6 +184,7 @@ function PickerInner({
         style={{ width: "100%", height: "100%", minHeight: 240 }}
         className="h-60 w-full sm:h-72"
       >
+        <EnsureMapType mapTypeId="satellite" />
         <Recenter target={value || fallback} zoom={value ? followZoom : 13} />
         <MapClickHandler onPick={onPick} />
         <AddressGeocoder

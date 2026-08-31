@@ -228,7 +228,6 @@ function GoogleMapInner({
       <Map
         defaultCenter={UB_CENTER}
         defaultZoom={DEFAULT_ZOOM}
-        defaultMapTypeId={DEFAULT_MAP_TYPE}
         gestureHandling="greedy"
         disableDefaultUI={false}
         mapTypeControl
