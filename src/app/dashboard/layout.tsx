@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { AuthLoadingScreen } from "@/hooks/useRequireAuth";
+import { PortalProvider, STAFF_PORTAL } from "@/providers/PortalProvider";
 import { useAuth } from "@/providers/AuthProvider";
 
 function DashboardStaffGuard({ children }: { children: React.ReactNode }) {
@@ -29,7 +30,11 @@ function DashboardStaffGuard({ children }: { children: React.ReactNode }) {
     return <AuthLoadingScreen />;
   }
 
-  return <>{children}</>;
+  return (
+    <PortalProvider value={STAFF_PORTAL}>
+      <DashboardLayout>{children}</DashboardLayout>
+    </PortalProvider>
+  );
 }
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -42,9 +47,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <Suspense fallback={<AuthLoadingScreen />}>
-      <DashboardStaffGuard>
-        <DashboardLayout>{children}</DashboardLayout>
-      </DashboardStaffGuard>
+      <DashboardStaffGuard>{children}</DashboardStaffGuard>
     </Suspense>
   );
 }

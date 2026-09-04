@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import { fetchDashboardStats, fetchManageProperties } from "@/lib/api";
 import { BRAND_COLOR } from "@/lib/theme";
 import { useAuth } from "@/providers/AuthProvider";
+import { portalPath, usePortal } from "@/providers/PortalProvider";
 import type { DashboardStats, Property } from "@/types";
 
 const { Title, Text, Paragraph } = Typography;
@@ -29,6 +30,7 @@ function formatPrice(value: string | number) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const portal = usePortal();
   const isStaff = Boolean(user?.is_staff);
   const isCompanyAdmin = Boolean(user?.is_company_admin);
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -165,19 +167,19 @@ export default function DashboardPage() {
       <Row gutter={[16, 16]}>
         {[
           {
-            href: "/dashboard/listings",
+            href: portalPath(portal.basePath, "listings"),
             icon: <FileTextOutlined style={{ fontSize: 24, color: BRAND_COLOR }} />,
-            title: "Зарууд",
+            title: "Зaruud",
             desc: isStaff
               ? "Бүх зар"
               : isCompanyAdmin
                 ? "Компанийн зарууд"
                 : "Өөрийн зарууд",
           },
-          ...(isStaff
+          ...(portal.mode === "staff" && isStaff
             ? [
                 {
-                  href: "/dashboard/companies",
+                  href: portalPath(portal.basePath, "companies"),
                   icon: <BankOutlined style={{ fontSize: 24, color: BRAND_COLOR }} />,
                   title: "Компаниуд",
                   desc: "Байгууллага удирдлага",
@@ -187,13 +189,13 @@ export default function DashboardPage() {
           ...(isStaff || isCompanyAdmin
             ? [
                 {
-                  href: "/dashboard/agents",
+                  href: portalPath(portal.basePath, "agents"),
                   icon: <TeamOutlined style={{ fontSize: 24, color: BRAND_COLOR }} />,
                   title: "Агентүүд",
                   desc: isStaff ? "Бүх агент" : "Компанийн агентууд",
                 },
                 {
-                  href: "/dashboard/invites",
+                  href: portalPath(portal.basePath, "invites"),
                   icon: <TeamOutlined style={{ fontSize: 24, color: BRAND_COLOR }} />,
                   title: "Урилга",
                   desc: "Код & бүртгэл батлах",
@@ -203,17 +205,17 @@ export default function DashboardPage() {
           ...(stats?.has_agent_profile
             ? [
                 {
-                  href: "/dashboard/subscription",
+                  href: portalPath(portal.basePath, "subscription"),
                   icon: <CreditCardOutlined style={{ fontSize: 24, color: BRAND_COLOR }} />,
                   title: "Захиалга",
                   desc: "Багц, subscription",
                 },
               ]
             : []),
-          ...(isStaff
+          ...(portal.mode === "staff" && isStaff
             ? [
                 {
-                  href: "/dashboard/packages",
+                  href: portalPath(portal.basePath, "packages"),
                   icon: <SettingOutlined style={{ fontSize: 24, color: BRAND_COLOR }} />,
                   title: "Багцууд",
                   desc: "Package удирдлага",
@@ -244,7 +246,7 @@ export default function DashboardPage() {
               title="Захиалгын хэрэглээ"
               className="shadow-sm h-full"
               extra={
-                <Link href="/dashboard/subscription">
+                <Link href={portalPath(portal.basePath, "subscription")}>
                   <Button type="link" icon={<ArrowRightOutlined />}>
                     Удирдах
                   </Button>
@@ -295,7 +297,7 @@ export default function DashboardPage() {
                 <div className="py-4 text-center">
                   <Text type="secondary">Идэвхтэй захиалга байхгүй</Text>
                   <div className="mt-3">
-                    <Button type="primary" href="/dashboard/subscription">
+                    <Button type="primary" href={portalPath(portal.basePath, "subscription")}>
                       Багц сонгох
                     </Button>
                   </div>
@@ -309,7 +311,7 @@ export default function DashboardPage() {
             title="Сүүлийн зарууд"
             className="shadow-sm"
             extra={
-              <Link href="/dashboard/listings">
+              <Link href={portalPath(portal.basePath, "listings")}>
                 <Button type="link">Бүгдийг харах</Button>
               </Link>
             }

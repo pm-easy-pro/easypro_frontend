@@ -18,70 +18,61 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { Avatar, Breadcrumb, Button, Dropdown, Layout, Menu, theme, Typography } from "antd";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { EasyProLogoMark } from "@/components/layout/EasyProLogoMark";
 import { BRAND_COLOR } from "@/lib/theme";
+import { portalPath, usePortal } from "@/providers/PortalProvider";
 import { useAuth } from "@/providers/AuthProvider";
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-const BREADCRUMB_MAP: Record<string, string> = {
-  "/dashboard": "Тойм",
-  "/dashboard/listings": "Зарууд",
-  "/dashboard/companies": "Компаниуд",
-  "/dashboard/agents": "Агентүүд",
-  "/dashboard/invites": "Урилга & бүртгэл",
-  "/dashboard/subscription": "Захиалга",
-  "/dashboard/packages": "Багцууд",
+const SEGMENT_LABELS: Record<string, string> = {
+  listings: "Зaruud",
+  companies: "Компаниуд",
+  agents: "Агентүүд",
+  invites: "Урилга & бүртгэл",
+  subscription: "Захиалга",
+  packages: "Багцууд",
 };
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, loading } = useAuth();
+  const { user, logout } = useAuth();
+  const portal = usePortal();
   const { token } = theme.useToken();
 
-  useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      router.replace(`/dashboard/login?next=${encodeURIComponent(pathname || "/dashboard")}`);
-      return;
-    }
-    if (!user.is_staff) {
-      router.replace("/dashboard/login");
-    }
-  }, [user, loading, router, pathname]);
-
-  const hasAgent = Boolean(user?.agent_profile);
   const isStaff = Boolean(user?.is_staff);
   const isOrg = user?.agent_profile?.agent_type === "organization";
   const isCompanyAdmin = Boolean(user?.is_company_admin) || isOrg;
+  const hasAgent = Boolean(user?.agent_profile);
 
   const menuItems = useMemo(() => {
+    const p = portal.basePath;
     const items = [
-      { key: "/dashboard", icon: <HomeOutlined />, label: "Тойм" },
-      { key: "/dashboard/listings", icon: <UnorderedListOutlined />, label: "Зарууд" },
+      { key: p, icon: <HomeOutlined />, label: "Тойм" },
+      { key: portalPath(p, "listings"), icon: <UnorderedListOutlined />, label: "Зарууд" },
     ];
-    if (isStaff) {
-      items.push({ key: "/dashboard/companies", icon: <BankOutlined />, label: "Компаниуд" });
+    if (portal.mode === "staff" && isStaff) {
+      items.push({ key: portalPath(p, "companies"), icon: <BankOutlined />, label: "Компаниуд" });
     }
     if (isStaff || isCompanyAdmin) {
-      items.push({ key: "/dashboard/agents", icon: <TeamOutlined />, label: "Агентүүд" });
-      items.push({ key: "/dashboard/invites", icon: <GiftOutlined />, label: "Урилга & бүртгэл" });
+      items.push({ key: portalPath(p, "agents"), icon: <TeamOutlined />, label: "Агентүүд" });
+      items.push({ key: portalPath(p, "invites"), icon: <GiftOutlined />, label: "Урилга & бүртгэл" });
     }
     if (hasAgent) {
       items.push({
-        key: "/dashboard/subscription",
+        key: portalPath(p, "subscription"),
         icon: <CreditCardOutlined />,
         label: "Захиалга",
       });
     }
-    if (isStaff) {
+    if (portal.mode === "staff" && isStaff) {
       items.push({
-        key: "/dashboard/packages",
+        key: portalPath(p, "packages"),
         icon: <SettingOutlined />,
         label: "Багцууд",
       });
@@ -92,22 +83,26 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       label: "Зар нэмэх",
     });
     return items;
-  }, [hasAgent, isStaff, isCompanyAdmin]);
+  }, [hasAgent, isStaff, isCompanyAdmin, portal.basePath, portal.mode]);
 
   const selectedKey = useMemo(() => {
     const exact = menuItems.find((item) => pathname === item.key);
     if (exact) return exact.key;
 
     const prefixMatch = [...menuItems]
-      .filter((item) => item.key !== "/dashboard" && pathname.startsWith(`${item.key}/`))
+      .filter((item) => item.key !== portal.basePath && pathname.startsWith(`${item.key}/`))
       .sort((a, b) => b.key.length - a.key.length)[0];
     if (prefixMatch) return prefixMatch.key;
 
-    if (pathname.startsWith("/dashboard")) return "/dashboard";
-    return menuItems[0]?.key ?? "/dashboard";
-  }, [menuItems, pathname]);
+    if (pathname.startsWith(portal.basePath)) return portal.basePath;
+    return menuItems[0]?.key ?? portal.basePath;
+  }, [menuItems, pathname, portal.basePath]);
 
-  const breadcrumbTitle = BREADCRUMB_MAP[pathname] ?? "Dashboard";
+  const breadcrumbTitle = useMemo(() => {
+    if (pathname === portal.basePath) return "Тойм";
+    const segment = pathname.replace(`${portal.basePath}/`, "").split("/")[0];
+    return SEGMENT_LABELS[segment] ?? portal.homeLabel;
+  }, [pathname, portal.basePath, portal.homeLabel]);
 
   const userMenu = {
     items: [
@@ -131,7 +126,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         danger: true,
         onClick: () => {
           logout();
-          router.push("/dashboard/login");
+          router.push(portal.loginPath);
         },
       },
     ],
@@ -165,18 +160,18 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         {!collapsed && (
           <div className="absolute bottom-4 left-4 right-4 rounded-xl bg-white/10 p-3">
             <Text className="!text-xs !text-white/70">
-              {isStaff
-                ? "Системийн админ"
-                : isCompanyAdmin
-                  ? "Company admin"
+              {portal.mode === "company"
+                ? "Компанийн админ"
+                : isStaff
+                  ? "Системийн админ"
                   : hasAgent
                     ? "Агент"
                     : "Хэрэглэгч"}
             </Text>
             <div className="mt-1 truncate text-sm font-medium text-white">
-              {isStaff
-                ? user?.username
-                : user?.agent_profile?.display_label || user?.username}
+              {user?.agent_profile?.company_name ||
+                user?.agent_profile?.display_label ||
+                user?.username}
             </div>
             {isCompanyAdmin && user?.agent_profile?.company_name ? (
               <div className="mt-0.5 truncate text-[11px] text-white/60">
@@ -206,7 +201,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             />
             <Breadcrumb
               items={[
-                { title: <Link href="/dashboard">Dashboard</Link> },
+                { title: <Link href={portal.basePath}>{portal.homeLabel}</Link> },
                 { title: breadcrumbTitle },
               ]}
             />

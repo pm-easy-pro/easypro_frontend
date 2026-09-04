@@ -577,6 +577,9 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
   const [titleManual, setTitleManual] = useState(false);
   const router = useRouter();
   const { user, loading } = useAuth();
+  const listingsPortalPath = user?.is_company_admin
+    ? "/agent/listings"
+    : "/dashboard/listings";
   const profile = user?.agent_profile;
   const canPostAsAgent = profile?.agent_type === "individual";
   const canPostAsCompany = profile?.agent_type === "organization";
@@ -924,7 +927,7 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
       if (created?.id) {
         router.push(`/properties/${created.id}`);
       } else {
-        router.push("/dashboard/listings");
+        router.push(listingsPortalPath);
       }
     } catch (err: unknown) {
       const detail = extractApiError(err);
@@ -2096,7 +2099,7 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
                     Буцах
                   </Button>
                 ) : (
-                  <Link href="/dashboard/listings">
+                  <Link href={listingsPortalPath}>
                     <Button size="large" type="text" className="text-slate-500">
                       Болих
                     </Button>
