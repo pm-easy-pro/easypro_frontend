@@ -8,6 +8,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "EasyPro — Үл хөдлөх хөрөнгийн платформ",
   description: "Монголын премиум үл хөдлөх хөрөнгийн зар, хайлт, шүүлтүүр",
+  icons: {
+    icon: [{ url: "/logo-mark.png", type: "image/png" }],
+    apple: [{ url: "/logo-mark.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
