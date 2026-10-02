@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, MapPinned, Sparkles, Users } from "lucide-react";
 
+import { SITE_INTRO_SELLERS } from "@/lib/site-intro";
+
 const VALUES = [
   {
     icon: Sparkles,
@@ -35,10 +37,7 @@ export function HomeValueProps() {
           <h2 className="mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
             Мэргэжлийн үл хөдлөх хөрөнгийн туршлага
           </h2>
-          <p className="mt-3 text-slate-600">
-            Худалдах, түрээслэх, худалдан авах — нэг платформ, цэвэр интерфэйс, хүчтэй
-            хайлт.
-          </p>
+          <p className="mt-3 text-slate-600">{SITE_INTRO_SELLERS}</p>
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">

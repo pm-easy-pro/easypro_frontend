@@ -122,11 +122,13 @@ export default function DashboardInvitesPage() {
   };
 
   const copyCode = async (code: string) => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const inviteUrl = `${origin}/login?invite=${encodeURIComponent(code)}`;
     try {
-      await navigator.clipboard.writeText(code);
-      message.success("Код хуулагдлаа");
+      await navigator.clipboard.writeText(inviteUrl);
+      message.success("Урилгын холбоос хуулагдлаа");
     } catch {
-      message.info(code);
+      message.info(inviteUrl);
     }
   };
 

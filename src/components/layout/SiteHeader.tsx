@@ -80,10 +80,16 @@ export function SiteHeader() {
                     router.push("/dashboard");
                   } else if (user.is_company_admin) {
                     router.push("/agent");
+                  } else if (user.agent_profile?.agent_type === "individual" && user.agent_profile.id) {
+                    router.push(`/agents/${user.agent_profile.id}`);
                   }
                 }}
                 className={`inline-flex max-w-[140px] items-center gap-2 truncate rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm font-medium backdrop-blur ${
-                  user.is_staff || user.is_company_admin ? "cursor-pointer hover:bg-white/15" : ""
+                  user.is_staff ||
+                  user.is_company_admin ||
+                  user.agent_profile?.agent_type === "individual"
+                    ? "cursor-pointer hover:bg-white/15"
+                    : ""
                 }`}
               >
                 <User className="h-4 w-4 shrink-0" />

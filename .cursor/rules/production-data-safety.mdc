@@ -1,0 +1,18 @@
+---
+description: EasyPro production — API өгөгдөл устгахгүй, backend командууд
+alwaysApply: true
+---
+
+# Production (frontend хөгжүүлэлт)
+
+EasyPro **production дээр ажиллаж байна** (https://easypro.mn → https://api.easypro.mn/api).
+
+## Frontend agent
+
+- `NEXT_PUBLIC_API_URL` production: `https://api.easypro.mn/api`
+- Build/prerender: dynamic хуудсууд дээр API алдааг барьж, хоосон fallback ашигла
+- Backend дээр `flush`, `seed_demo_data`, DB reset **санал бүү болго** — дэлгэрэнгүй backend `docs/PRODUCTION.md`
+
+## Холбоотой repo
+
+Backend (`easypro_backend`): migration, seed, MySQL — production-data-safety rule тэнд илүү чухал.

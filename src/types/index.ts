@@ -158,8 +158,8 @@ export interface Property {
   has_elevator: boolean;
   window_count?: number | null;
   bathroom_count?: number | null;
-  view_direction?: string;
-  view_direction_display?: string;
+  view_directions?: string[];
+  view_directions_display?: string;
   garage: boolean;
   balcony: boolean;
   furnished: boolean;

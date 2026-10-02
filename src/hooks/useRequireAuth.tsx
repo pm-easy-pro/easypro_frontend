@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Spin } from "antd";
 
+import { getProfileSetupPath } from "@/lib/auth-routes";
 import { useAuth } from "@/providers/AuthProvider";
 
 export function useRequireAuth(fallback = "/login") {
@@ -20,7 +21,8 @@ export function useRequireAuth(fallback = "/login") {
       return;
     }
     if (user.profile_completed === false && !pathname.startsWith("/profile")) {
-      router.replace("/profile/setup");
+      const invite = searchParams.get("invite");
+      router.replace(getProfileSetupPath(invite));
     }
   }, [user, loading, router, fallback, searchParams, pathname]);
 

@@ -4,14 +4,15 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 
+import { getLoginPathWithInvite } from "@/lib/auth-routes";
+
 function RegisterRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const invite = searchParams.get("invite");
-    const qs = invite ? `?invite=${encodeURIComponent(invite)}` : "";
-    router.replace(`/login${qs}`);
+    router.replace(getLoginPathWithInvite(invite));
   }, [router, searchParams]);
 
   return (

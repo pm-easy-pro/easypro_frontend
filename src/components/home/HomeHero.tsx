@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button, Input, Select } from "antd";
 import { MapPinned, Search } from "lucide-react";
 
+import { SiteIntroText } from "@/components/layout/SiteIntroText";
 import { ListingTypeTabs } from "@/components/search/ListingTypeTabs";
 import type { FilterOption } from "@/types";
 
@@ -83,9 +84,10 @@ export function HomeHero({
         Өөрт тохирох
         <span className="text-amber-300"> үл хөдлөх хөрөнгө</span> олох
       </h1>
-      <p className="mx-auto mt-4 max-w-xl text-base text-white/75 md:text-lg">
-        Байршил, төрөл, өрөөний тоогоор шүүж — газрын зураг дээр харьцуулна
-      </p>
+      <SiteIntroText
+        className="mx-auto mt-4 max-w-2xl space-y-3 text-left sm:text-center"
+        paragraphClassName="text-sm leading-relaxed text-white/80 md:text-base"
+      />
 
       {/* Search card */}
       <div className="mt-8 overflow-hidden rounded-2xl border border-white/20 bg-white shadow-2xl shadow-black/25 sm:rounded-3xl">

@@ -17,7 +17,9 @@ import {
 } from "lucide-react";
 
 import { EasyProLogoMark } from "@/components/layout/EasyProLogoMark";
+import { SiteIntroText } from "@/components/layout/SiteIntroText";
 import { sendOtp } from "@/lib/api";
+import { getPostAuthPath, getProfileSetupPath } from "@/lib/auth-routes";
 import { useAuth } from "@/providers/AuthProvider";
 
 function HeroBackdrop() {
@@ -55,8 +57,10 @@ function LoginPageContent() {
   const { loginWithOtp, user, loading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next") || "/dashboard";
   const invite = searchParams.get("invite");
+  const nextPath =
+    searchParams.get("next") ||
+    (invite ? getProfileSetupPath(invite) : "/");
 
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phone, setPhone] = useState("");
@@ -77,10 +81,9 @@ function LoginPageContent() {
   useEffect(() => {
     if (!loading && user) {
       if (user.profile_completed === false) {
-        const q = invite ? `?invite=${encodeURIComponent(invite)}` : "";
-        router.replace(`/profile/setup${q}`);
+        router.replace(getProfileSetupPath(invite));
       } else {
-        router.replace(nextPath);
+        router.replace(getPostAuthPath(user, { invite }));
       }
     }
   }, [loading, user, router, nextPath, invite]);
@@ -127,10 +130,9 @@ function LoginPageContent() {
       const me = await loginWithOtp(phone, c);
       message.success("Амжилттай нэвтэрлээ");
       if (!me.profile_completed) {
-        const q = invite ? `?invite=${encodeURIComponent(invite)}` : "";
-        router.push(`/profile/setup${q}`);
+        router.push(getProfileSetupPath(invite));
       } else {
-        router.push(nextPath);
+        router.push(getPostAuthPath(me, { invite }));
       }
     } catch (err: unknown) {
       const data =
@@ -193,10 +195,10 @@ function LoginPageContent() {
             <br />
             хүрээрэй.
           </h1>
-          <p className="mt-5 max-w-lg text-base leading-relaxed text-white/80">
-            EasyPro дээр орон сууц, гэр, оффисоо зарж эсвэл түрээслүүлнэ. Хувь хүн ч, агент/
-            компани ч — нэг платформоос бүгдийг удирдана.
-          </p>
+          <SiteIntroText
+            className="mt-5 max-w-lg space-y-4"
+            paragraphClassName="text-base leading-relaxed text-white/80"
+          />
         </motion.div>
         <div className="relative z-10 hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-1">
           {[

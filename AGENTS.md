@@ -1,5 +1,18 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# EasyPro Frontend — Agent заавар
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+- Production: https://easypro.mn
+- API: `NEXT_PUBLIC_API_URL=https://api.easypro.mn/api` (Vercel)
+
+## Дүрэм
+
+`.cursor/rules/production-data-safety.mdc` — production статус, backend өгөгдөлд хүрэх командууд санал болгохгүй
+
+## Backend / өгөгдөл
+
+Migration, seed, MySQL backup: **easypro_backend** repo — `docs/PRODUCTION.md`, `DEPLOY.md`
+
+## Төслийн тэмдэглэл
+
+- OTP login: `/login`
+- Company admin: `/agent/*` (тусдаа `/agent/login`)
+- Platform staff: `/dashboard/*`

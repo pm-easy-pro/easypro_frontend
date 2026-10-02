@@ -92,7 +92,7 @@ interface PropertyFormValues {
   total_floor?: number | null;
   window_count?: number | null;
   bathroom_count?: number | null;
-  view_direction?: string;
+  view_directions?: string[];
   payment_terms?: string[];
   year_built?: number | null;
   building_type?: string;
@@ -127,7 +127,7 @@ function toFormValues(p: Property): PropertyFormValues {
     total_floor: p.total_floor,
     window_count: p.window_count ?? null,
     bathroom_count: p.bathroom_count ?? null,
-    view_direction: p.view_direction || undefined,
+    view_directions: p.view_directions?.length ? p.view_directions : undefined,
     payment_terms: p.payment_terms || [],
     year_built: p.year_built,
     building_type: p.building_type || undefined,
@@ -168,7 +168,7 @@ function toPayload(values: PropertyFormValues, editing: Property | null) {
     total_floor: values.total_floor ?? null,
     window_count: values.window_count ?? null,
     bathroom_count: values.bathroom_count ?? null,
-    view_direction: values.view_direction || "",
+    view_directions: values.view_directions || [],
     payment_terms: values.payment_terms || [],
     year_built: values.year_built ?? null,
     building_type: values.building_type || "",
@@ -689,8 +689,14 @@ export default function DashboardListingsPage() {
             <Form.Item name="window_count" label="Цонхны тоо">
               <InputNumber className="w-full" min={0} />
             </Form.Item>
-            <Form.Item name="view_direction" label="Цонхны харагдац">
-              <Select allowClear options={options?.view_directions} />
+            <Form.Item name="view_directions" label="Цонхны харагдац">
+              <Select
+                mode="multiple"
+                allowClear
+                options={options?.view_directions}
+                placeholder="Олон чиглэл"
+                maxTagCount="responsive"
+              />
             </Form.Item>
             <Form.Item name="floor" label="Давхар">
               <InputNumber className="w-full" />

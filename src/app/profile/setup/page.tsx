@@ -24,6 +24,7 @@ import {
 
 import { EasyProLogoMark } from "@/components/layout/EasyProLogoMark";
 import { previewInviteCode } from "@/lib/api";
+import { getPostAuthPath, getProfileSetupPath } from "@/lib/auth-routes";
 import { useAuth } from "@/providers/AuthProvider";
 
 type ProfileType = "owner" | "agent";
@@ -68,6 +69,8 @@ function ProfileSetupForm() {
   const { user, loading, updateProfile, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const inviteFromUrl = searchParams.get("invite");
+  const isInviteFlow = Boolean(inviteFromUrl);
   const [profileType, setProfileType] = useState<ProfileType>("owner");
   const [submitting, setSubmitting] = useState(false);
   const [inviteOrg, setInviteOrg] = useState<string | null>(null);
@@ -76,14 +79,14 @@ function ProfileSetupForm() {
   const [form] = Form.useForm();
 
   useEffect(() => {
-    const code = searchParams.get("invite");
+    const code = inviteFromUrl;
     if (code) {
       setProfileType("agent");
       form.setFieldsValue({ invite_code: code.toUpperCase() });
       void checkInvite(code);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, form]);
+  }, [inviteFromUrl, form]);
 
   useEffect(() => {
     if (loading) return;
@@ -92,7 +95,7 @@ function ProfileSetupForm() {
       return;
     }
     if (user.profile_completed) {
-      router.replace(user.is_staff ? "/dashboard" : "/post-property");
+      router.replace(getPostAuthPath(user));
     }
   }, [user, loading, router]);
 
@@ -124,7 +127,7 @@ function ProfileSetupForm() {
     }
     setSubmitting(true);
     try {
-      await updateProfile(
+      const me = await updateProfile(
         profileType === "owner"
           ? {
               profile_type: "owner",
@@ -146,7 +149,7 @@ function ProfileSetupForm() {
           ? "Профайл илгээгдлээ — company admin зөвшөөрнө"
           : "Профайл хадгалагдлаа",
       );
-      router.push(profileType === "owner" ? "/post-property" : "/properties");
+      router.push(getPostAuthPath(me));
     } catch (err: unknown) {
       const data =
         err && typeof err === "object" && "response" in err
@@ -201,8 +204,9 @@ function ProfileSetupForm() {
             <span className="text-amber-300">бүрэн болгоорой</span>
           </h1>
           <p className="mt-4 text-base leading-relaxed text-white/80">
-            Утас баталгаажсан. Одоо хувь хүн эсвэл агент эсэхээ сонгоод үндсэн мэдээллээ
-            оруулахад л бэлэн болно.
+            {isInviteFlow
+              ? "Утас баталгаажсан. Компанийн урилгаар агент профайлаа бөглөөд шууд профайл руугаа орно."
+              : "Утас баталгаажсан. Одоо хувь хүн эсвэл агент эсэхээ сонгоод үндсэн мэдээллээ оруулахад л бэлэн болно."}
           </p>
         </motion.div>
 
@@ -286,12 +290,15 @@ function ProfileSetupForm() {
           </div>
 
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Таны профайл
+            {isInviteFlow ? "Агент профайл" : "Таны профайл"}
           </h2>
           <p className="mt-2 text-sm text-slate-500">
-            Төрлөө сонгоод мэдээллээ бөглөнө үү — дараа нь өөрчилж болно
+            {isInviteFlow
+              ? "Урилгын кодоо баталгаажуулж, агентын мэдээллээ бөглөнө үү"
+              : "Төрлөө сонгоод мэдээллээ бөглөнө үү — дараа нь өөрчилж болно"}
           </p>
 
+          {!isInviteFlow ? (
           <div className="mt-6">
             <p className="mb-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">
               Би хэн бэ?
@@ -341,6 +348,7 @@ function ProfileSetupForm() {
               })}
             </div>
           </div>
+          ) : null}
 
           <Form
             form={form}

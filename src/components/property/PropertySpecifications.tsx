@@ -179,7 +179,7 @@ export function PropertySpecifications({ property }: PropertySpecificationsProps
     {
       icon: Compass,
       label: "Харагдац",
-      value: property.view_direction_display || null,
+      value: property.view_directions_display || null,
     },
   ];
 
@@ -214,7 +214,7 @@ export function PropertySpecifications({ property }: PropertySpecificationsProps
       </div>
       <div className="space-y-8">
         <SpecSection title="Барилга" items={buildingItems} />
-        {(isApartment || property.window_count || property.view_direction) && (
+        {(isApartment || property.window_count || (property.view_directions?.length ?? 0) > 0) && (
           <SpecSection title="Орон сууц" items={unitItems} />
         )}
         <SpecSection title="Тохь тух" items={amenityItems} />

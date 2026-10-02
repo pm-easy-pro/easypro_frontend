@@ -605,7 +605,7 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
   const condition = Form.useWatch("condition", form);
   const bathroomCount = Form.useWatch("bathroom_count", form);
   const windowCount = Form.useWatch("window_count", form);
-  const viewDirection = Form.useWatch("view_direction", form);
+  const viewDirections = Form.useWatch("view_directions", form) as string[] | undefined;
   const paymentTerms = Form.useWatch("payment_terms", form) as string[] | undefined;
   const hasElevator = Form.useWatch("has_elevator", form);
   const hasBalcony = Form.useWatch("balcony", form);
@@ -887,7 +887,7 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
         total_floor: isLand ? null : optionalInt(values.total_floor),
         bathroom_count: isLand ? null : optionalInt(values.bathroom_count),
         window_count: isLand ? null : optionalInt(values.window_count),
-        view_direction: isLand ? "" : values.view_direction || "",
+        view_directions: isLand ? [] : values.view_directions || [],
         building_type: isLand ? "" : values.building_type || "",
         year_built: isLand ? null : optionalInt(values.year_built),
         payment_terms: isLand ? [] : values.payment_terms || [],
@@ -982,8 +982,11 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
     options?.conditions?.find((c) => c.value === condition)?.label ||
     (condition ? String(condition) : null);
 
+  const viewDirectionLabels = (viewDirections || [])
+    .map((v) => options?.view_directions?.find((d) => d.value === v)?.label || v)
+    .filter(Boolean);
   const viewDirectionLabel =
-    options?.view_directions?.find((v) => v.value === viewDirection)?.label || null;
+    viewDirectionLabels.length > 0 ? viewDirectionLabels.join(", ") : null;
 
   const paymentTermLabels = (paymentTerms || [])
     .map((v) => options?.payment_terms?.find((p) => p.value === v)?.label || v)
@@ -1802,12 +1805,14 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
                             </Form.Item>
                           </div>
 
-                          <Form.Item name="view_direction" label="Цонхны харагдац">
+                          <Form.Item name="view_directions" label="Цонхны харагдац">
                             <Select
+                              mode="multiple"
                               size="large"
                               allowClear
                               options={options?.view_directions}
-                              placeholder="Сонгох"
+                              placeholder="Олон чиглэл сонгох"
+                              maxTagCount="responsive"
                             />
                           </Form.Item>
 
