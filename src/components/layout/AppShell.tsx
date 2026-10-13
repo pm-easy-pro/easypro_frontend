@@ -4,7 +4,13 @@ import { usePathname } from "next/navigation";
 
 import { SiteHeader } from "@/components/layout/SiteHeader";
 
-const SHELL_EXCLUDED_PREFIXES = ["/login", "/register", "/dashboard", "/agent", "/profile"];
+const SHELL_EXCLUDED_PREFIXES = [
+  "/login",
+  "/register",
+  "/dashboard",
+  "/agent",
+  "/profile/setup",
+];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
