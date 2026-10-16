@@ -38,11 +38,18 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   if (typeof FormData !== "undefined" && config.data instanceof FormData) {
-    // Let the browser set multipart boundary
-    if (typeof config.headers.set === "function") {
-      config.headers.set("Content-Type", false as unknown as string);
-    } else {
-      delete (config.headers as Record<string, unknown>)["Content-Type"];
+    // Must drop JSON default so the browser can set multipart boundary
+    const headers = config.headers;
+    if (headers && typeof headers === "object") {
+      if (typeof (headers as { delete?: (k: string) => void }).delete === "function") {
+        (headers as { delete: (k: string) => void }).delete("Content-Type");
+        (headers as { delete: (k: string) => void }).delete("content-type");
+      }
+      delete (headers as Record<string, unknown>)["Content-Type"];
+      delete (headers as Record<string, unknown>)["content-type"];
+      if (typeof (headers as { set?: (k: string, v: unknown) => void }).set === "function") {
+        (headers as { set: (k: string, v: unknown) => void }).set("Content-Type", false);
+      }
     }
   }
   return config;
@@ -425,8 +432,13 @@ export async function updateMe(payload: ProfileUpdatePayload) {
     if (payload.bio !== undefined) formData.append("bio", payload.bio);
     if (payload.invite_code !== undefined) formData.append("invite_code", payload.invite_code);
     if (payload.clear_avatar) formData.append("clear_avatar", "true");
-    if (payload.avatar instanceof File) formData.append("avatar", payload.avatar);
-    const { data } = await api.patch<User>("/auth/me/", formData);
+    if (payload.avatar instanceof File) {
+      formData.append("avatar", payload.avatar, payload.avatar.name);
+    }
+    const { data } = await api.patch<User>("/auth/me/", formData, {
+      // Override instance JSON default; interceptor also strips this for FormData
+      headers: { "Content-Type": undefined as unknown as string },
+    });
     return data;
   }
 

@@ -65,7 +65,7 @@ function ProfilePageContent() {
     ? null
     : preview || user.avatar_url || agent?.avatar_url || null;
 
-  const onPickAvatar = (file: File | undefined) => {
+  const onPickAvatar = async (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       message.error("Зөвхөн зураг сонгоно уу");
@@ -77,7 +77,24 @@ function ProfilePageContent() {
     }
     setAvatarFile(file);
     setClearAvatar(false);
-    setPreview(URL.createObjectURL(file));
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    setSaving(true);
+    try {
+      await updateProfile({ avatar: file });
+      message.success("Профайл зураг хадгалагдлаа");
+      setAvatarFile(null);
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    } catch {
+      message.error("Зураг хадгалахад алдаа гарлаа");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onFinish = async (values: {
@@ -153,7 +170,7 @@ function ProfilePageContent() {
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   className="hidden"
                   onChange={(e) => {
-                    onPickAvatar(e.target.files?.[0]);
+                    void onPickAvatar(e.target.files?.[0]);
                     e.target.value = "";
                   }}
                 />

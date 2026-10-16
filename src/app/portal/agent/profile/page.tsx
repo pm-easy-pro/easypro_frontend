@@ -40,7 +40,7 @@ export default function AgentPortalProfilePage() {
   const currentAvatar =
     clearAvatar ? null : preview || user?.avatar_url || profile?.avatar_url || null;
 
-  const onPickFile = (file: File | undefined) => {
+  const onPickFile = async (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       message.error("Зөвхөн зураг сонгоно уу");
@@ -52,7 +52,34 @@ export default function AgentPortalProfilePage() {
     }
     setAvatarFile(file);
     setClearAvatar(false);
-    setPreview(URL.createObjectURL(file));
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+    // Upload immediately so зураг сонгоход шууд хадгалагдана
+    setSaving(true);
+    try {
+      await updateProfile({ avatar: file });
+      message.success("Профайл зураг хадгалагдлаа");
+      setAvatarFile(null);
+      setPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
+    } catch (err: unknown) {
+      const data =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: Record<string, unknown> } }).response?.data
+          : undefined;
+      const first =
+        data &&
+        Object.values(data)
+          .flat()
+          .find((m) => typeof m === "string");
+      message.error(typeof first === "string" ? first : "Зураг хадгалахад алдаа гарлаа");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const onSave = async (values: {
@@ -134,7 +161,7 @@ export default function AgentPortalProfilePage() {
               accept="image/jpeg,image/png,image/webp,image/gif"
               className="hidden"
               onChange={(e) => {
-                onPickFile(e.target.files?.[0]);
+                void onPickFile(e.target.files?.[0]);
                 e.target.value = "";
               }}
             />
@@ -154,11 +181,23 @@ export default function AgentPortalProfilePage() {
                 <Button
                   size="small"
                   danger
+                  loading={saving}
                   icon={<Trash2 className="h-3.5 w-3.5" />}
                   onClick={() => {
-                    setAvatarFile(null);
-                    setPreview(null);
-                    setClearAvatar(true);
+                    void (async () => {
+                      setSaving(true);
+                      try {
+                        await updateProfile({ clear_avatar: true });
+                        setAvatarFile(null);
+                        setPreview(null);
+                        setClearAvatar(false);
+                        message.success("Профайл зураг устгалаа");
+                      } catch {
+                        message.error("Устгахад алдаа гарлаа");
+                      } finally {
+                        setSaving(false);
+                      }
+                    })();
                   }}
                 >
                   Устгах
