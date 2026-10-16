@@ -9,7 +9,9 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  Building2,
   Home,
+  KeyRound,
   Phone,
   Search,
   Sparkles,
@@ -20,6 +22,7 @@ import { EasyProLogoMark } from "@/components/layout/EasyProLogoMark";
 import { SiteIntroText } from "@/components/layout/SiteIntroText";
 import { sendOtp } from "@/lib/api";
 import { getPostAuthPath, getProfileSetupPath } from "@/lib/auth-routes";
+import { getAgentPortalUrl, getCompanyPortalUrl } from "@/lib/portals";
 import { useAuth } from "@/providers/AuthProvider";
 
 function HeroBackdrop() {
@@ -383,6 +386,27 @@ function LoginPageContent() {
               Нэвтрэхгүйгээр зар хайх →
             </Link>
           </p>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <a
+              href={getAgentPortalUrl("/login")}
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center transition hover:border-[#183E95]/40 hover:bg-[#183E95]/5 hover:shadow-sm"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#183E95]/10 text-[#183E95] transition group-hover:bg-[#183E95] group-hover:text-white">
+                <KeyRound className="h-5 w-5" />
+              </span>
+              <span className="text-sm font-semibold text-slate-900">Агентаар нэвтрэх</span>
+            </a>
+            <a
+              href={getCompanyPortalUrl("/login")}
+              className="group flex flex-col items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center transition hover:border-[#183E95]/40 hover:bg-[#183E95]/5 hover:shadow-sm"
+            >
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#183E95]/10 text-[#183E95] transition group-hover:bg-[#183E95] group-hover:text-white">
+                <Building2 className="h-5 w-5" />
+              </span>
+              <span className="text-sm font-semibold text-slate-900">Компаниар нэвтрэх</span>
+            </a>
+          </div>
         </div>
       </section>
     </div>

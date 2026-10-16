@@ -37,9 +37,16 @@ export function getMainSiteUrl(path = "/") {
   return `${origin}${normalized}`;
 }
 
-/** Agent portal profile — agent.easypro.mn/profile (local: /portal/agent/profile) */
+/** Agent portal — agent.easypro.mn (local: /portal/agent) */
 export function getAgentPortalUrl(path = "/") {
   const origin = getPortalOrigin("agent").replace(/\/$/, "");
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${origin}${normalized}`;
+}
+
+/** Company portal — company.easypro.mn (local: /agent) */
+export function getCompanyPortalUrl(path = "/") {
+  const origin = getPortalOrigin("company").replace(/\/$/, "");
   const normalized = path.startsWith("/") ? path : `/${path}`;
   return `${origin}${normalized}`;
 }
