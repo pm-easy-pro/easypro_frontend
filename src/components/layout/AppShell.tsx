@@ -9,6 +9,7 @@ const SHELL_EXCLUDED_PREFIXES = [
   "/register",
   "/dashboard",
   "/agent",
+  "/portal/agent",
   "/profile/setup",
 ];
 

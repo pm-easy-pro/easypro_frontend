@@ -95,7 +95,9 @@ function ProfileSetupForm() {
       return;
     }
     if (user.profile_completed) {
-      router.replace(getPostAuthPath(user));
+      const dest = getPostAuthPath(user);
+      if (dest.startsWith("http")) window.location.replace(dest);
+      else router.replace(dest);
     }
   }, [user, loading, router]);
 
@@ -149,7 +151,9 @@ function ProfileSetupForm() {
           ? "Профайл илгээгдлээ — company admin зөвшөөрнө"
           : "Профайл хадгалагдлаа",
       );
-      router.push(getPostAuthPath(me));
+      const dest = getPostAuthPath(me);
+      if (dest.startsWith("http")) window.location.assign(dest);
+      else router.push(dest);
     } catch (err: unknown) {
       const data =
         err && typeof err === "object" && "response" in err

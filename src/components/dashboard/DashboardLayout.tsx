@@ -29,12 +29,13 @@ const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
 const SEGMENT_LABELS: Record<string, string> = {
-  listings: "Зaruud",
+  listings: "Зарууд",
   companies: "Компаниуд",
   agents: "Агентүүд",
   invites: "Урилга & бүртгэл",
   subscription: "Захиалга",
   packages: "Багцууд",
+  profile: "Профайл",
 };
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       { key: p, icon: <HomeOutlined />, label: "Тойм" },
       { key: portalPath(p, "listings"), icon: <UnorderedListOutlined />, label: "Зарууд" },
     ];
+    if (portal.mode === "agent") {
+      items.push({ key: portalPath(p, "profile"), icon: <UserOutlined />, label: "Профайл" });
+      items.push({
+        key: "/post-property",
+        icon: <PlusOutlined />,
+        label: "Зар нэмэх",
+      });
+      return items;
+    }
     if (portal.mode === "staff" && isStaff) {
       items.push({ key: portalPath(p, "companies"), icon: <BankOutlined />, label: "Компаниуд" });
     }
@@ -162,11 +172,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <Text className="!text-xs !text-white/70">
               {portal.mode === "company"
                 ? "Компанийн админ"
-                : isStaff
-                  ? "Системийн админ"
-                  : hasAgent
-                    ? "Агент"
-                    : "Хэрэглэгч"}
+                : portal.mode === "agent"
+                  ? "Агент"
+                  : isStaff
+                    ? "Системийн админ"
+                    : hasAgent
+                      ? "Агент"
+                      : "Хэрэглэгч"}
             </Text>
             <div className="mt-1 truncate text-sm font-medium text-white">
               {user?.agent_profile?.company_name ||

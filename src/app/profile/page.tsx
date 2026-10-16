@@ -205,6 +205,20 @@ function ProfilePageContent() {
                     </Link>
                   </li>
                 ) : null}
+                {user.agent_profile?.agent_type === "individual" ? (
+                  <li>
+                    <Link
+                      href="/portal/agent"
+                      className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm font-medium text-slate-800 transition hover:border-[#183E95]/30 hover:bg-[#183E95]/5"
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-[#183E95]" />
+                        Агент портал
+                      </span>
+                      <ArrowRight className="h-4 w-4 text-slate-400" />
+                    </Link>
+                  </li>
+                ) : null}
                 {user.is_staff ? (
                   <li>
                     <Link

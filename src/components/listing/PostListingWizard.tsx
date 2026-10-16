@@ -572,6 +572,7 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(0);
   const [ownerTypeOverride, setOwnerTypeOverride] = useState<ListingOwnerType | null>(null);
+  const [visibilityScopes, setVisibilityScopes] = useState<string[]>(["public"]);
   const [mapPos, setMapPos] = useState<LatLng | null>(null);
   const [geocodeStatus, setGeocodeStatus] = useState<GeocodeStatus>("idle");
   const [titleManual, setTitleManual] = useState(false);
@@ -579,7 +580,11 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
   const { user, loading } = useAuth();
   const listingsPortalPath = user?.is_company_admin
     ? "/agent/listings"
-    : "/dashboard/listings";
+    : user?.agent_profile?.agent_type === "individual"
+      ? "/portal/agent/listings"
+      : user?.is_staff
+        ? "/dashboard/listings"
+        : "/profile";
   const profile = user?.agent_profile;
   const canPostAsAgent = profile?.agent_type === "individual";
   const canPostAsCompany = profile?.agent_type === "organization";
@@ -898,6 +903,12 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
         latitude: mapPos.lat,
         longitude: mapPos.lng,
         listing_owner_type: ownerType,
+        visibility_scopes:
+          canPostAsAgent || canPostAsCompany
+            ? visibilityScopes.length
+              ? visibilityScopes
+              : ["public"]
+            : ["public"],
       };
 
       if (isLand) {
@@ -2076,6 +2087,38 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
                                 />
                               )}
                             </div>
+                          </div>
+                        )}
+
+                        {(canPostAsAgent || canPostAsCompany) && (
+                          <div>
+                            <p className="mb-2.5 text-sm font-semibold text-slate-800">
+                              Хаана харагдах вэ?
+                            </p>
+                            <p className="mb-3 text-xs text-slate-500">
+                              Олон сонголт зэрэг сонгож болно
+                            </p>
+                            <Checkbox.Group
+                              className="flex flex-col gap-2"
+                              value={visibilityScopes}
+                              onChange={(vals) =>
+                                setVisibilityScopes(vals.map(String))
+                              }
+                              options={[
+                                {
+                                  value: "public",
+                                  label: "Public — easypro.mn дээр нийтэд",
+                                },
+                                {
+                                  value: "company",
+                                  label: "Company дотор — зөвхөн ижил компанийн агентууд",
+                                },
+                                {
+                                  value: "network",
+                                  label: "Нийт company — бүх компани/агент портал",
+                                },
+                              ]}
+                            />
                           </div>
                         )}
 

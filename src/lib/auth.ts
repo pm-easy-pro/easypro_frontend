@@ -16,6 +16,10 @@ export function setTokens(access: string, refresh: string) {
   localStorage.setItem(REFRESH_KEY, refresh);
 }
 
+export function setAccessToken(access: string) {
+  localStorage.setItem(ACCESS_KEY, access);
+}
+
 export function clearTokens() {
   localStorage.removeItem(ACCESS_KEY);
   localStorage.removeItem(REFRESH_KEY);

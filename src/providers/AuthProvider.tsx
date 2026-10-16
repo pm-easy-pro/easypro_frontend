@@ -3,6 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 import {
+  agentPinLogin,
+  agentPinResetVerify,
+  agentPinSetupVerify,
   fetchMe,
   login as apiLogin,
   updateMe,
@@ -15,10 +18,24 @@ import type { User } from "@/types";
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  /** Username/password — dashboard superadmin */
+  /** Username/password — dashboard superadmin / company */
   login: (username: string, password: string) => Promise<User>;
   /** Phone OTP — public users */
   loginWithOtp: (phone: string, code: string) => Promise<User>;
+  /** Individual agent — phone + PIN */
+  loginWithAgentPin: (phone: string, pin: string) => Promise<User>;
+  setupAgentPin: (payload: {
+    phone: string;
+    code: string;
+    pin: string;
+    pin_confirm: string;
+  }) => Promise<User>;
+  resetAgentPin: (payload: {
+    phone: string;
+    code: string;
+    pin: string;
+    pin_confirm: string;
+  }) => Promise<User>;
   updateProfile: (payload: ProfileUpdatePayload) => Promise<User>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -63,6 +80,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return result.user;
   };
 
+  const loginWithAgentPin = async (phone: string, pin: string) => {
+    const result = await agentPinLogin(phone, pin);
+    setTokens(result.access, result.refresh);
+    setUser(result.user);
+    return result.user;
+  };
+
+  const setupAgentPin = async (payload: {
+    phone: string;
+    code: string;
+    pin: string;
+    pin_confirm: string;
+  }) => {
+    const result = await agentPinSetupVerify(payload);
+    setTokens(result.access, result.refresh);
+    setUser(result.user);
+    return result.user;
+  };
+
+  const resetAgentPin = async (payload: {
+    phone: string;
+    code: string;
+    pin: string;
+    pin_confirm: string;
+  }) => {
+    const result = await agentPinResetVerify(payload);
+    setTokens(result.access, result.refresh);
+    setUser(result.user);
+    return result.user;
+  };
+
   const updateProfile = async (payload: ProfileUpdatePayload) => {
     const me = await updateMe(payload);
     setUser(me);
@@ -76,7 +124,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, loginWithOtp, updateProfile, logout, refreshUser }}
+      value={{
+        user,
+        loading,
+        login,
+        loginWithOtp,
+        loginWithAgentPin,
+        setupAgentPin,
+        resetAgentPin,
+        updateProfile,
+        logout,
+        refreshUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -53,10 +53,14 @@ export function isLandProperty(property: { property_type?: string }) {
   return property.property_type === "land";
 }
 
-export function formatTimeAgo(dateStr: string) {
+/** SSR/client ижил — Intl locale Node vs browser зөрөхгүй */
+export function formatTimeAgoDate(date: Date) {
+  return `${date.getMonth() + 1}-р сарын ${date.getDate()}`;
+}
+
+export function formatTimeAgo(dateStr: string, nowMs = Date.now()) {
   const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = nowMs - date.getTime();
   const minutes = Math.floor(diffMs / 60000);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
@@ -66,5 +70,5 @@ export function formatTimeAgo(dateStr: string) {
   if (hours < 24) return `${hours} цагийн өмнө`;
   if (days < 7) return `${days} өдрийн өмнө`;
   if (days < 30) return `${Math.floor(days / 7)} долоо хоногийн өмнө`;
-  return date.toLocaleDateString("mn-MN", { month: "short", day: "numeric" });
+  return formatTimeAgoDate(date);
 }

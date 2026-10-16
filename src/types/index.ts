@@ -183,9 +183,13 @@ export interface Property {
   land_contract_end?: string | null;
   land_use_type?: string;
   land_use_type_display?: string;
+  /** public | company | network */
+  visibility_scopes?: string[];
   created_at: string;
   updated_at?: string;
 }
+
+export type VisibilityScope = "public" | "company" | "network";
 
 export interface PaginatedResponse<T> {
   count: number;

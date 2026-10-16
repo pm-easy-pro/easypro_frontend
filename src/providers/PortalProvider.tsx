@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useMemo } from "react";
 
-export type PortalMode = "staff" | "company";
+export type PortalMode = "staff" | "company" | "agent";
 
 export interface PortalConfig {
   mode: PortalMode;
@@ -25,6 +25,13 @@ export const COMPANY_PORTAL: PortalConfig = {
   homeLabel: "Компани",
 };
 
+export const AGENT_PORTAL: PortalConfig = {
+  mode: "agent",
+  basePath: "/portal/agent",
+  loginPath: "/portal/agent/login",
+  homeLabel: "Агент",
+};
+
 const PortalContext = createContext<PortalConfig>(STAFF_PORTAL);
 
 export function PortalProvider({
@@ -44,5 +51,5 @@ export function usePortal() {
 
 export function portalPath(basePath: string, segment?: string) {
   if (!segment) return basePath;
-  return `${basePath}/${segment.replace(/^\//, "")}`;
+  return `${basePath}/${segment}`.replace(/\/+/g, "/");
 }

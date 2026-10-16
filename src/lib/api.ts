@@ -1,6 +1,12 @@
-import axios from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-import { clearTokens, getAccessToken } from "@/lib/auth";
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setTokens,
+} from "@/lib/auth";
 import type {
   Agent,
   AgentCompanyPayload,
@@ -42,13 +48,67 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+type RetryConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+let refreshPromise: Promise<string | null> | null = null;
+
+async function refreshAccessToken(): Promise<string | null> {
+  const refresh = getRefreshToken();
+  if (!refresh) return null;
+
+  try {
+    const { data } = await axios.post<{ access: string; refresh?: string }>(
+      `${API_URL}/auth/refresh/`,
+      { refresh },
+      { headers: { "Content-Type": "application/json" } },
+    );
+    if (data.refresh) {
+      setTokens(data.access, data.refresh);
+    } else {
+      setAccessToken(data.access);
+    }
+    return data.access;
+  } catch {
+    clearTokens();
+    return null;
+  }
+}
+
+function queueRefresh(): Promise<string | null> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
 api.interceptors.response.use(
   (res) => res,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== "undefined") {
-      clearTokens();
+  async (error: AxiosError) => {
+    const original = error.config as RetryConfig | undefined;
+    if (
+      error.response?.status !== 401 ||
+      typeof window === "undefined" ||
+      !original ||
+      original._retry
+    ) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    const url = original.url || "";
+    if (url.includes("/auth/refresh/") || url.includes("/auth/login/") || url.includes("/auth/otp/")) {
+      clearTokens();
+      return Promise.reject(error);
+    }
+
+    original._retry = true;
+    const access = await queueRefresh();
+    if (!access) {
+      return Promise.reject(error);
+    }
+    original.headers.Authorization = `Bearer ${access}`;
+    return api(original);
   },
 );
 
@@ -248,6 +308,79 @@ export interface OtpVerifyResponse extends AuthTokens {
 
 export async function verifyOtp(phone: string, code: string) {
   const { data } = await api.post<OtpVerifyResponse>("/auth/otp/verify/", { phone, code });
+  return data;
+}
+
+export interface AgentPinStatus {
+  phone: string;
+  is_agent: boolean;
+  has_pin: boolean;
+  needs_setup: boolean;
+  display_name?: string;
+}
+
+export interface AgentPinAuthResponse extends AuthTokens {
+  user: User;
+}
+
+export async function agentPinStatus(phone: string) {
+  const { data } = await api.post<AgentPinStatus>("/auth/agent/pin/status/", { phone });
+  return data;
+}
+
+export async function agentPinSetupSendOtp(phone: string) {
+  const { data } = await api.post<{
+    message: string;
+    phone: string;
+    expires_in: number;
+    sms_sent: boolean;
+    debug_code?: string;
+  }>("/auth/agent/pin/setup/send-otp/", { phone });
+  return data;
+}
+
+export async function agentPinSetupVerify(payload: {
+  phone: string;
+  code: string;
+  pin: string;
+  pin_confirm: string;
+}) {
+  const { data } = await api.post<AgentPinAuthResponse>(
+    "/auth/agent/pin/setup/verify/",
+    payload,
+  );
+  return data;
+}
+
+export async function agentPinLogin(phone: string, pin: string) {
+  const { data } = await api.post<AgentPinAuthResponse>("/auth/agent/pin/login/", {
+    phone,
+    pin,
+  });
+  return data;
+}
+
+export async function agentPinResetSendOtp(phone: string) {
+  const { data } = await api.post<{
+    message: string;
+    phone: string;
+    expires_in: number;
+    sms_sent: boolean;
+    debug_code?: string;
+  }>("/auth/agent/pin/reset/send-otp/", { phone });
+  return data;
+}
+
+export async function agentPinResetVerify(payload: {
+  phone: string;
+  code: string;
+  pin: string;
+  pin_confirm: string;
+}) {
+  const { data } = await api.post<AgentPinAuthResponse>(
+    "/auth/agent/pin/reset/verify/",
+    payload,
+  );
   return data;
 }
 

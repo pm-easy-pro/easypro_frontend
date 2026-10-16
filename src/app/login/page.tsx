@@ -83,7 +83,12 @@ function LoginPageContent() {
       if (user.profile_completed === false) {
         router.replace(getProfileSetupPath(invite));
       } else {
-        router.replace(getPostAuthPath(user, { invite }));
+        const dest = getPostAuthPath(user, { invite });
+        if (dest.startsWith("http")) {
+          window.location.replace(dest);
+        } else {
+          router.replace(dest);
+        }
       }
     }
   }, [loading, user, router, nextPath, invite]);
@@ -132,7 +137,12 @@ function LoginPageContent() {
       if (!me.profile_completed) {
         router.push(getProfileSetupPath(invite));
       } else {
-        router.push(getPostAuthPath(me, { invite }));
+        const dest = getPostAuthPath(me, { invite });
+        if (dest.startsWith("http")) {
+          window.location.assign(dest);
+        } else {
+          router.push(dest);
+        }
       }
     } catch (err: unknown) {
       const data =

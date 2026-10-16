@@ -399,6 +399,15 @@ export default function DashboardListingsPage() {
             {record.is_vip && <Tag color="gold">VIP</Tag>}
             {record.is_verified && <Tag color="blue">Баталгаажсан</Tag>}
             {record.is_active === false && <Tag>Идэвхгүй</Tag>}
+            {(record.visibility_scopes || []).includes("public") && (
+              <Tag color="green">Нийтэд</Tag>
+            )}
+            {(record.visibility_scopes || []).includes("company") && (
+              <Tag>Company</Tag>
+            )}
+            {(record.visibility_scopes || []).includes("network") && (
+              <Tag color="purple">Network</Tag>
+            )}
           </div>
         </div>
       ),

@@ -1,5 +1,7 @@
 import type { User } from "@/types";
 
+import { getPortalOrigin } from "@/lib/portals";
+
 /** OTP / профайл дууссаны дараа хэрэглэгчийг зөв хуудас руу илгээнэ */
 export function getPostAuthPath(
   user: User,
@@ -10,15 +12,19 @@ export function getPostAuthPath(
     return `/profile/setup${q}`;
   }
 
-  if (user.is_staff) return "/dashboard";
-  if (user.is_company_admin) return "/agent";
-
-  const agentId = user.agent_profile?.id;
-  if (user.agent_profile?.agent_type === "individual" && agentId) {
-    return `/agents/${agentId}`;
+  // Absolute origins for production subdomains; path prefixes in local getPortalOrigin
+  if (user.is_staff) {
+    return getPortalOrigin("dashboard");
+  }
+  if (user.is_company_admin) {
+    return getPortalOrigin("company");
   }
 
-  return "/post-property";
+  if (user.agent_profile?.agent_type === "individual") {
+    return getPortalOrigin("agent");
+  }
+
+  return "/";
 }
 
 export function getLoginPathWithInvite(invite?: string | null) {
