@@ -29,3 +29,17 @@ export function getPortalFromHost(host: string): PortalHost {
   if (h.startsWith("dashboard.")) return "dashboard";
   return "main";
 }
+
+/** Absolute URL on the public main site (easypro.mn), e.g. post-property flow */
+export function getMainSiteUrl(path = "/") {
+  const origin = getPortalOrigin("main").replace(/\/$/, "");
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${origin}${normalized}`;
+}
+
+/** Agent portal profile — agent.easypro.mn/profile (local: /portal/agent/profile) */
+export function getAgentPortalUrl(path = "/") {
+  const origin = getPortalOrigin("agent").replace(/\/$/, "");
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${origin}${normalized}`;
+}

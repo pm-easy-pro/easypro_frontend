@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button, Card, Col, Row, Statistic, Typography } from "antd";
 import { PlusOutlined, UnorderedListOutlined } from "@ant-design/icons";
 
+import { getPostPropertyHref } from "@/lib/auth-routes";
 import { fetchManageProperties } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -46,11 +47,11 @@ export default function AgentPortalHomePage() {
         <Link href="/portal/agent/listings">
           <Button icon={<UnorderedListOutlined />}>Зарууд</Button>
         </Link>
-        <Link href="/post-property">
+        <a href={getPostPropertyHref()}>
           <Button type="primary" icon={<PlusOutlined />}>
             Зар нэмэх
           </Button>
-        </Link>
+        </a>
         <Link href="/portal/agent/profile">
           <Button>Профайл</Button>
         </Link>

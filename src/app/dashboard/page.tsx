@@ -16,6 +16,7 @@ import { Button, Card, Col, Progress, Row, Spin, Statistic, Table, Tag, Typograp
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 
+import { getPostPropertyHref } from "@/lib/auth-routes";
 import { fetchDashboardStats, fetchManageProperties } from "@/lib/api";
 import { BRAND_COLOR } from "@/lib/theme";
 import { useAuth } from "@/providers/AuthProvider";
@@ -117,7 +118,7 @@ export default function DashboardPage() {
             Таны үл хөдлөхийн удирдлагын самбар
           </Paragraph>
         </div>
-        <Button type="primary" icon={<PlusOutlined />} href="/post-property" size="large">
+        <Button type="primary" icon={<PlusOutlined />} href={getPostPropertyHref()} size="large">
           Зар нэмэх
         </Button>
       </div>

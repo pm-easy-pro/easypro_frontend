@@ -460,6 +460,11 @@ export async function fetchManageProperties(params?: {
   return data;
 }
 
+export async function fetchManageProperty(id: number | string) {
+  const { data } = await api.get<Property>(`/properties/manage/${id}/`);
+  return data;
+}
+
 export async function createManageProperty(payload: Record<string, unknown>) {
   const { data } = await api.post<Property>("/properties/manage/", payload);
   return data;

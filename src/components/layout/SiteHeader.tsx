@@ -6,11 +6,21 @@ import { Bell, LogOut, Plus, User } from "lucide-react";
 
 import { EasyProLogoMark } from "@/components/layout/EasyProLogoMark";
 import { HeaderSearch } from "@/components/search/HeaderSearch";
+import {
+  getHeaderProfileHref,
+  getPostPropertyHref,
+} from "@/lib/auth-routes";
 import { useAuth } from "@/providers/AuthProvider";
 
 export function SiteHeader() {
   const router = useRouter();
   const { user, loading, logout } = useAuth();
+  const profileHref = user ? getHeaderProfileHref(user) : "/profile";
+  const postHref = getPostPropertyHref();
+  const profileIsExternal =
+    profileHref.startsWith("http://") || profileHref.startsWith("https://");
+  const postIsExternal =
+    postHref.startsWith("http://") || postHref.startsWith("https://");
 
   return (
     <header className="sticky top-0 z-50 border-b border-[#183E95]/10 bg-[#183E95] text-white shadow-md">
@@ -32,24 +42,46 @@ export function SiteHeader() {
           >
             <Bell className="h-5 w-5" />
           </button>
-          <Link
-            href="/post-property"
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-3 py-2 text-sm font-bold text-amber-950 shadow transition hover:bg-amber-300 sm:px-4"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Зар нэмэх</span>
-          </Link>
+          {postIsExternal ? (
+            <a
+              href={postHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-3 py-2 text-sm font-bold text-amber-950 shadow transition hover:bg-amber-300 sm:px-4"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Зар нэмэх</span>
+            </a>
+          ) : (
+            <Link
+              href={postHref}
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-3 py-2 text-sm font-bold text-amber-950 shadow transition hover:bg-amber-300 sm:px-4"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Зар нэмэх</span>
+            </Link>
+          )}
           {!loading && user ? (
             <div className="flex items-center gap-1">
-              <Link
-                href="/profile"
-                className="inline-flex max-w-[140px] items-center gap-2 truncate rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-white/15"
-              >
-                <User className="h-4 w-4 shrink-0" />
-                <span className="truncate">
-                  {user.display_name || user.first_name || user.username}
-                </span>
-              </Link>
+              {profileIsExternal ? (
+                <a
+                  href={profileHref}
+                  className="inline-flex max-w-[140px] items-center gap-2 truncate rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-white/15"
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {user.display_name || user.first_name || user.username}
+                  </span>
+                </a>
+              ) : (
+                <Link
+                  href={profileHref}
+                  className="inline-flex max-w-[140px] items-center gap-2 truncate rounded-xl border border-white/25 bg-white/10 px-3 py-2 text-sm font-medium backdrop-blur transition hover:bg-white/15"
+                >
+                  <User className="h-4 w-4 shrink-0" />
+                  <span className="truncate">
+                    {user.display_name || user.first_name || user.username}
+                  </span>
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => {

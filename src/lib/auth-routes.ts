@@ -1,6 +1,10 @@
 import type { User } from "@/types";
 
-import { getPortalOrigin } from "@/lib/portals";
+import {
+  getAgentPortalUrl,
+  getMainSiteUrl,
+  getPortalOrigin,
+} from "@/lib/portals";
 
 /** OTP / профайл дууссаны дараа хэрэглэгчийг зөв хуудас руу илгээнэ */
 export function getPostAuthPath(
@@ -25,6 +29,25 @@ export function getPostAuthPath(
   }
 
   return "/";
+}
+
+/** Main-site header profile link */
+export function getHeaderProfileHref(user: User): string {
+  if (user.agent_profile?.agent_type === "individual") {
+    return getAgentPortalUrl("/profile");
+  }
+  if (user.is_company_admin || user.agent_profile?.agent_type === "organization") {
+    return getPortalOrigin("company");
+  }
+  if (user.is_staff) {
+    return getPortalOrigin("dashboard");
+  }
+  return "/profile";
+}
+
+/** Post listing always uses the public main-site wizard */
+export function getPostPropertyHref() {
+  return getMainSiteUrl("/post-property");
 }
 
 export function getLoginPathWithInvite(invite?: string | null) {

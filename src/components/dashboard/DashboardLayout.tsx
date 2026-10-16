@@ -21,6 +21,8 @@ import { Avatar, Breadcrumb, Button, Dropdown, Layout, Menu, theme, Typography }
 import { useMemo, useState } from "react";
 
 import { EasyProLogoMark } from "@/components/layout/EasyProLogoMark";
+import { getPostPropertyHref } from "@/lib/auth-routes";
+import { getMainSiteUrl } from "@/lib/portals";
 import { BRAND_COLOR } from "@/lib/theme";
 import { portalPath, usePortal } from "@/providers/PortalProvider";
 import { useAuth } from "@/providers/AuthProvider";
@@ -51,6 +53,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isCompanyAdmin = Boolean(user?.is_company_admin) || isOrg;
   const hasAgent = Boolean(user?.agent_profile);
 
+  const postPropertyHref = getPostPropertyHref();
+
   const menuItems = useMemo(() => {
     const p = portal.basePath;
     const items = [
@@ -60,7 +64,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     if (portal.mode === "agent") {
       items.push({ key: portalPath(p, "profile"), icon: <UserOutlined />, label: "Профайл" });
       items.push({
-        key: "/post-property",
+        key: postPropertyHref,
         icon: <PlusOutlined />,
         label: "Зар нэмэх",
       });
@@ -88,12 +92,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       });
     }
     items.push({
-      key: "/post-property",
+      key: postPropertyHref,
       icon: <PlusOutlined />,
       label: "Зар нэмэх",
     });
     return items;
-  }, [hasAgent, isStaff, isCompanyAdmin, portal.basePath, portal.mode]);
+  }, [hasAgent, isStaff, isCompanyAdmin, portal.basePath, portal.mode, postPropertyHref]);
 
   const selectedKey = useMemo(() => {
     const exact = menuItems.find((item) => pathname === item.key);
@@ -127,7 +131,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         key: "site",
         icon: <AppstoreOutlined />,
         label: "Вэбсайт руу",
-        onClick: () => router.push("/"),
+        onClick: () => {
+          window.location.assign(getMainSiteUrl("/"));
+        },
       },
       {
         key: "logout",
@@ -140,6 +146,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         },
       },
     ],
+  };
+
+  const navigateMenu = (key: string) => {
+    if (key.startsWith("http://") || key.startsWith("https://")) {
+      window.location.assign(key);
+      return;
+    }
+    router.push(key);
   };
 
   return (
@@ -165,7 +179,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           className="dashboard-sider-menu"
           style={{ background: "transparent", borderRight: 0 }}
           items={menuItems}
-          onClick={({ key }) => router.push(key)}
+          onClick={({ key }) => navigateMenu(key)}
         />
         {!collapsed && (
           <div className="absolute bottom-4 left-4 right-4 rounded-xl bg-white/10 p-3">
