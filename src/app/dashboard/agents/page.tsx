@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { KeyOutlined, SearchOutlined } from "@ant-design/icons";
+import { KeyOutlined, SearchOutlined, UserOutlined } from "@ant-design/icons";
 import {
   Button,
   Card,
@@ -97,16 +98,40 @@ export default function DashboardAgentsPage() {
     {
       title: "Агент",
       key: "name",
-      render: (_, record) => (
-        <div>
-          <Link href={`/agents/${record.id}`} className="font-medium text-[#183E95] hover:underline">
-            {[record.title, record.display_name || record.display_label].filter(Boolean).join(" ")}
-          </Link>
-          {record.username ? (
-            <div className="text-xs text-slate-400">@{record.username}</div>
-          ) : null}
-        </div>
-      ),
+      render: (_, record) => {
+        const name = [record.title, record.display_name || record.display_label]
+          .filter(Boolean)
+          .join(" ");
+        return (
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#183E95]/10 text-[#183E95]">
+              {record.avatar_url ? (
+                <Image
+                  src={record.avatar_url}
+                  alt={name}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                  sizes="44px"
+                />
+              ) : (
+                <UserOutlined className="text-lg" />
+              )}
+            </div>
+            <div className="min-w-0">
+              <Link
+                href={`/agents/${record.id}`}
+                className="font-medium text-[#183E95] hover:underline"
+              >
+                {name}
+              </Link>
+              {record.username ? (
+                <div className="text-xs text-slate-400">@{record.username}</div>
+              ) : null}
+            </div>
+          </div>
+        );
+      },
     },
     {
       title: "Компани",
