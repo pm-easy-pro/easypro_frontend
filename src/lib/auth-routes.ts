@@ -45,9 +45,9 @@ export function getHeaderProfileHref(user: User): string {
   return "/profile";
 }
 
-/** Post listing always uses the public main-site wizard */
+/** Post listing chooser on main site (үл хөдлөх / газар) */
 export function getPostPropertyHref() {
-  return getMainSiteUrl("/post-property");
+  return getMainSiteUrl("/post");
 }
 
 export function getLoginPathWithInvite(invite?: string | null) {
