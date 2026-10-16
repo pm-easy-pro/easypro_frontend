@@ -1,16 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { SearchOutlined } from "@ant-design/icons";
-import { Card, Input, Select, Table, Tag, Typography, message } from "antd";
+import { KeyOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { useCallback, useEffect, useState } from "react";
 
-import { fetchManageAgents } from "@/lib/api";
+import { fetchManageAgents, staffSetAgentPin } from "@/lib/api";
 import { useAuth } from "@/providers/AuthProvider";
 import type { Agent } from "@/types";
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 export default function DashboardAgentsPage() {
   const { user } = useAuth();
@@ -25,6 +36,9 @@ export default function DashboardAgentsPage() {
     "all" | "pending" | "approved" | "denied"
   >("all");
   const [loading, setLoading] = useState(true);
+  const [pinAgent, setPinAgent] = useState<Agent | null>(null);
+  const [pinSaving, setPinSaving] = useState(false);
+  const [pinForm] = Form.useForm();
 
   const load = useCallback(async () => {
     if (!canManage) {
@@ -48,6 +62,36 @@ export default function DashboardAgentsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const openPinModal = (agent: Agent) => {
+    setPinAgent(agent);
+    pinForm.resetFields();
+  };
+
+  const savePin = async (values: { pin: string; pin_confirm: string }) => {
+    if (!pinAgent) return;
+    setPinSaving(true);
+    try {
+      const res = await staffSetAgentPin(pinAgent.id, values);
+      message.success(res.detail);
+      setAgents((prev) =>
+        prev.map((a) =>
+          a.id === pinAgent.id
+            ? { ...a, has_pin: true, pin_set_at: res.pin_set_at }
+            : a,
+        ),
+      );
+      setPinAgent(null);
+      pinForm.resetFields();
+    } catch (err: unknown) {
+      const detail =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || "PIN хадгалахад алдаа";
+      message.error(detail);
+    } finally {
+      setPinSaving(false);
+    }
+  };
 
   const columns: ColumnsType<Agent> = [
     {
@@ -79,11 +123,15 @@ export default function DashboardAgentsPage() {
       render: (phone: string) => phone || "—",
     },
     {
-      title: "Имэйл",
-      dataIndex: "email",
-      key: "email",
-      ellipsis: true,
-      render: (email: string) => email || "—",
+      title: "PIN",
+      key: "pin",
+      width: 120,
+      render: (_, record) =>
+        record.has_pin ? (
+          <Tag color="green">Тохируулсан</Tag>
+        ) : (
+          <Tag color="default">Байхгүй</Tag>
+        ),
     },
     {
       title: "Гишүүнчлэл",
@@ -106,11 +154,22 @@ export default function DashboardAgentsPage() {
     {
       title: "Үйлдэл",
       key: "action",
-      width: 120,
+      width: 200,
       render: (_, record) => (
-        <Link href={`/agents/${record.id}`} className="text-sm text-[#183E95] hover:underline">
-          Дэлгэрэнгүй
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="link"
+            size="small"
+            icon={<KeyOutlined />}
+            className="!px-0"
+            onClick={() => openPinModal(record)}
+          >
+            {record.has_pin ? "PIN солих" : "PIN тохируулах"}
+          </Button>
+          <Link href={`/agents/${record.id}`} className="text-sm text-slate-500 hover:text-[#183E95]">
+            Дэлгэрэнгүй
+          </Link>
+        </div>
       ),
     },
   ];
@@ -135,8 +194,8 @@ export default function DashboardAgentsPage() {
         </Title>
         <Paragraph type="secondary" className="!mb-0">
           {isStaff
-            ? "Платформын бүх хувь хүн агент"
-            : "Зөвхөн өөрийн компанийн агентууд"}
+            ? "Платформын бүх хувь хүн агент — PIN шууд тохируулах / солих боломжтой"
+            : "Зөвхөн өөрийн компанийн агентууд — PIN тохируулах / солих боломжтой"}
         </Paragraph>
       </div>
 
@@ -174,6 +233,101 @@ export default function DashboardAgentsPage() {
           locale={{ emptyText: "Агент олдсонгүй" }}
         />
       </Card>
+
+      <Modal
+        title={
+          pinAgent?.has_pin
+            ? "Агентийн PIN солих"
+            : "Агентийн PIN тохируулах"
+        }
+        open={Boolean(pinAgent)}
+        onCancel={() => {
+          setPinAgent(null);
+          pinForm.resetFields();
+        }}
+        footer={null}
+        destroyOnHidden
+      >
+        {pinAgent ? (
+          <div className="space-y-4">
+            <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm">
+              <div className="font-medium text-slate-900">
+                {[pinAgent.title, pinAgent.display_name || pinAgent.display_label]
+                  .filter(Boolean)
+                  .join(" ")}
+              </div>
+              <Text type="secondary">
+                Утас: {pinAgent.phone || "—"}
+                {pinAgent.has_pin ? " · PIN аль хэдийн тохируулагдсан" : " · PIN байхгүй"}
+              </Text>
+            </div>
+            <Paragraph type="secondary" className="!mb-0 text-sm">
+              SMS шаардлагагүй. Шинэ 6 оронтой PIN шууд тохируулна. Агент
+              agent.easypro.mn дээр утас + энэ PIN-ээр нэвтэрнэ.
+            </Paragraph>
+            <Form
+              form={pinForm}
+              layout="vertical"
+              requiredMark={false}
+              onFinish={savePin}
+            >
+              <Form.Item
+                name="pin"
+                label="Шинэ PIN"
+                rules={[
+                  { required: true, message: "PIN оруулна уу" },
+                  { pattern: /^\d{6}$/, message: "6 оронтой тоо" },
+                ]}
+              >
+                <Input.Password
+                  maxLength={6}
+                  inputMode="numeric"
+                  placeholder="••••••"
+                  size="large"
+                  className="!font-mono !tracking-widest"
+                />
+              </Form.Item>
+              <Form.Item
+                name="pin_confirm"
+                label="PIN дахин"
+                dependencies={["pin"]}
+                rules={[
+                  { required: true, message: "Дахин оруулна уу" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue("pin") === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("PIN таарахгүй байна"));
+                    },
+                  }),
+                ]}
+              >
+                <Input.Password
+                  maxLength={6}
+                  inputMode="numeric"
+                  placeholder="••••••"
+                  size="large"
+                  className="!font-mono !tracking-widest"
+                />
+              </Form.Item>
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => {
+                    setPinAgent(null);
+                    pinForm.resetFields();
+                  }}
+                >
+                  Болих
+                </Button>
+                <Button type="primary" htmlType="submit" loading={pinSaving}>
+                  {pinAgent.has_pin ? "PIN солих" : "PIN тохируулах"}
+                </Button>
+              </div>
+            </Form>
+          </div>
+        ) : null}
+      </Modal>
     </div>
   );
 }

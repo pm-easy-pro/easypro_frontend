@@ -63,6 +63,8 @@ export interface Agent {
   username?: string | null;
   reviewed_at?: string | null;
   reviewed_by_username?: string | null;
+  has_pin?: boolean;
+  pin_set_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }

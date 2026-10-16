@@ -384,6 +384,19 @@ export async function agentPinResetVerify(payload: {
   return data;
 }
 
+export async function staffSetAgentPin(
+  agentId: number,
+  payload: { pin: string; pin_confirm: string },
+) {
+  const { data } = await api.post<{
+    detail: string;
+    agent_id: number;
+    has_pin: boolean;
+    pin_set_at: string | null;
+  }>(`/agents/manage/${agentId}/pin/`, payload);
+  return data;
+}
+
 export interface ProfileUpdatePayload {
   first_name?: string;
   last_name?: string;
