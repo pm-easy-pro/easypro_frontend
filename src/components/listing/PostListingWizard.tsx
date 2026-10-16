@@ -755,14 +755,7 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
         ? ["province", "district_local", "khoroo"]
         : ["province"],
     isLand
-      ? [
-          "price",
-          "area_m2",
-          "parcel_number",
-          "land_right_type",
-          "land_use_type",
-          ...(landNeedsContract ? ["land_contract_start", "land_contract_end"] : []),
-        ]
+      ? ["price", "area_m2", "land_right_type", "land_use_type"]
       : ["price", "area_m2", "room_count"],
     ["title", "description"],
     [],
@@ -1599,9 +1592,6 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
                               <Form.Item
                                 name="parcel_number"
                                 label="Нэгж талбарын дугаар"
-                                rules={[
-                                  { required: true, message: "Нэгж талбарын дугаар оруулна уу" },
-                                ]}
                                 className="mb-0!"
                               >
                                 <Input
@@ -1684,9 +1674,6 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
                                     <Form.Item
                                       name="land_contract_start"
                                       label="Эхлэх огноо"
-                                      rules={[
-                                        { required: true, message: "Эхлэх огноо сонгоно уу" },
-                                      ]}
                                       className="mb-0! sm:mb-0!"
                                     >
                                       <DateField />
@@ -1694,9 +1681,6 @@ export function PostListingWizard({ listingKind }: PostListingWizardProps) {
                                     <Form.Item
                                       name="land_contract_end"
                                       label="Дуусах огноо"
-                                      rules={[
-                                        { required: true, message: "Дуусах огноо сонгоно уу" },
-                                      ]}
                                       className="mb-0!"
                                     >
                                       <DateField />
