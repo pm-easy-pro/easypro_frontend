@@ -19,25 +19,58 @@ function Avatar({
   src,
   alt,
   fallback,
-  size = "lg",
+  className = "h-14 w-14",
 }: {
   src?: string | null;
   alt: string;
   fallback: "user" | "building";
-  size?: "md" | "lg";
+  className?: string;
 }) {
-  const dim = size === "lg" ? "h-16 w-16" : "h-14 w-14";
   return (
     <div
-      className={`relative flex ${dim} shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#183E95]/10 text-[#183E95]`}
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#183E95]/10 text-[#183E95] ring-2 ring-white ${className}`}
     >
       {src ? (
         <Image src={src} alt={alt} fill className="object-cover" unoptimized />
       ) : fallback === "building" ? (
-        <Building2 className="h-8 w-8" />
+        <Building2 className="h-7 w-7" />
       ) : (
-        <User className="h-8 w-8" />
+        <User className="h-7 w-7" />
       )}
+    </div>
+  );
+}
+
+/** Company logo + agent photo stacked as one collaborative mark */
+function CollaborateAvatars({
+  companySrc,
+  companyAlt,
+  agentSrc,
+  agentAlt,
+}: {
+  companySrc?: string | null;
+  companyAlt: string;
+  agentSrc?: string | null;
+  agentAlt: string;
+}) {
+  return (
+    <div className="relative h-[4.5rem] w-[5.25rem] shrink-0" aria-hidden={!companySrc && !agentSrc}>
+      <div className="absolute left-0 top-0 z-0">
+        <Avatar
+          src={companySrc}
+          alt={companyAlt}
+          fallback="building"
+          className="h-14 w-14 rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+        />
+      </div>
+      <div className="absolute bottom-0 right-0 z-10">
+        <Avatar
+          src={agentSrc}
+          alt={agentAlt}
+          fallback="user"
+          className="h-12 w-12 rounded-xl border-2 border-white bg-slate-100 shadow-md"
+        />
+      </div>
     </div>
   );
 }
@@ -51,7 +84,7 @@ function ContactActions({
 }) {
   return (
     <>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+      <div className="mt-5 grid gap-2.5 sm:grid-cols-2">
         {phone ? (
           <Button type="primary" size="large" icon={<Phone className="h-4 w-4" />} block href={`tel:${phone}`}>
             Залгах
@@ -82,6 +115,11 @@ function VerifiedBadge() {
   );
 }
 
+function isUsefulExtra(text: string | undefined | null, companyName: string) {
+  if (!text?.trim()) return false;
+  return text.trim().toLowerCase() !== companyName.trim().toLowerCase();
+}
+
 export function AgentCard({
   agent,
   poster,
@@ -92,7 +130,6 @@ export function AgentCard({
     ? "space-y-0"
     : "rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm md:p-6";
 
-  // Хувь хүн эзэн
   if (listingOwnerType === "owner") {
     const name =
       poster?.display_name ||
@@ -105,7 +142,7 @@ export function AgentCard({
     return (
       <div className={shell}>
         <div className="flex items-center gap-4">
-          <Avatar src={poster?.avatar_url} alt={name} fallback="user" />
+          <Avatar src={poster?.avatar_url} alt={name} fallback="user" className="h-16 w-16" />
           <div className="min-w-0">
             {listingsHref ? (
               <Link
@@ -147,7 +184,9 @@ export function AgentCard({
     : agent.organization_detail
       ? {
           id: agent.organization_detail.id,
-          company_name: agent.organization_detail.company_name || agent.organization_detail.display_label,
+          company_name:
+            agent.organization_detail.company_name ||
+            agent.organization_detail.display_label,
           bio: agent.organization_detail.bio,
           address: agent.organization_detail.address,
           phone: agent.organization_detail.phone || agent.phone,
@@ -166,16 +205,23 @@ export function AgentCard({
           }
         : null;
 
-  // Компани зар
   if (listingOwnerType === "company" || isOrg) {
     const companyName = org?.company_name || agent.company_name || agent.display_label;
     return (
       <div className={shell}>
         <div className="flex items-start gap-4">
-          <Avatar src={agent.avatar_url || org?.avatar_url} alt={companyName} fallback="building" />
+          <Avatar
+            src={agent.avatar_url || org?.avatar_url}
+            alt={companyName}
+            fallback="building"
+            className="h-16 w-16"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <Link href={`/agents/${agent.id}`} className="text-lg font-bold text-slate-900 hover:text-[#183E95]">
+              <Link
+                href={`/agents/${agent.id}`}
+                className="text-lg font-bold text-slate-900 hover:text-[#183E95]"
+              >
                 {companyName}
               </Link>
               {agent.is_verified ? <VerifiedBadge /> : null}
@@ -183,10 +229,10 @@ export function AgentCard({
             {agent.phone ? <p className="mt-1 text-sm text-slate-600">{agent.phone}</p> : null}
           </div>
         </div>
-        {agent.bio ? (
+        {isUsefulExtra(agent.bio, companyName) ? (
           <p className="mt-4 text-sm leading-relaxed text-slate-600">{agent.bio}</p>
         ) : null}
-        {agent.address ? (
+        {isUsefulExtra(agent.address, companyName) ? (
           <p className="mt-3 flex items-start gap-2 text-sm text-slate-500">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#183E95]" />
             <span>{agent.address}</span>
@@ -197,61 +243,76 @@ export function AgentCard({
     );
   }
 
-  // Агент + компани
-  const personTitle = [agent.title, agent.display_name || agent.display_label].filter(Boolean).join(" ");
+  const personTitle = [agent.title, agent.display_name || agent.display_label]
+    .filter(Boolean)
+    .join(" ");
   const contactPhone = agent.phone || org?.phone;
+  const companyName = org?.company_name || "";
+  const showVerified = Boolean(agent.is_verified || org?.is_verified);
+  const usefulBio = isUsefulExtra(org?.bio || agent.bio, companyName || personTitle);
+  const usefulAddress = isUsefulExtra(org?.address, companyName || personTitle);
 
   return (
     <div className={shell}>
-      {org ? (
-        <div className="border-b border-slate-100 pb-5">
-          <div className="flex items-start gap-3">
-            <Avatar src={org.avatar_url} alt={org.company_name} fallback="building" size="md" />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                {org.id ? (
-                  <Link
-                    href={`/agents/${org.id}`}
-                    className="text-base font-bold text-slate-900 hover:text-[#183E95]"
-                  >
-                    {org.company_name}
-                  </Link>
-                ) : (
-                  <p className="text-base font-bold text-slate-900">{org.company_name}</p>
-                )}
-                {org.is_verified ? <VerifiedBadge /> : null}
-              </div>
-            </div>
+      <div className="flex items-start gap-3.5">
+        {org ? (
+          <CollaborateAvatars
+            companySrc={org.avatar_url}
+            companyAlt={companyName}
+            agentSrc={agent.avatar_url}
+            agentAlt={personTitle}
+          />
+        ) : (
+          <Avatar src={agent.avatar_url} alt={personTitle} fallback="user" className="h-16 w-16" />
+        )}
+
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/agents/${agent.id}`}
+              className="text-base font-bold leading-snug text-slate-900 hover:text-[#183E95]"
+            >
+              {personTitle}
+            </Link>
+            {showVerified ? <VerifiedBadge /> : null}
           </div>
-          {org.bio ? (
-            <p className="mt-3 text-sm leading-relaxed text-slate-600 line-clamp-3">{org.bio}</p>
+
+          {org ? (
+            <p className="mt-1 text-sm text-slate-500">
+              {org.id ? (
+                <Link
+                  href={`/agents/${org.id}`}
+                  className="font-medium text-slate-600 hover:text-[#183E95] hover:underline"
+                >
+                  {companyName}
+                </Link>
+              ) : (
+                <span className="font-medium text-slate-600">{companyName}</span>
+              )}
+              <span className="text-slate-400"> · Агент</span>
+            </p>
           ) : null}
-          {org.address ? (
-            <p className="mt-3 flex items-start gap-2 text-sm text-slate-500">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#183E95]" />
-              <span>{org.address}</span>
+
+          {contactPhone ? (
+            <p className="mt-1.5 text-sm font-medium tabular-nums text-slate-700">
+              {contactPhone}
             </p>
           ) : null}
         </div>
+      </div>
+
+      {usefulBio ? (
+        <p className="mt-4 text-sm leading-relaxed text-slate-600 line-clamp-3">
+          {org?.bio || agent.bio}
+        </p>
       ) : null}
 
-      <div className={org ? "pt-5" : ""}>
-        <div className="flex items-center gap-4">
-          <Avatar src={agent.avatar_url} alt={personTitle} fallback="user" />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Link href={`/agents/${agent.id}`} className="text-lg font-bold text-slate-900 hover:text-[#183E95]">
-                {personTitle}
-              </Link>
-              {agent.is_verified ? <VerifiedBadge /> : null}
-            </div>
-            {agent.phone ? <p className="mt-1 text-sm text-slate-600">{agent.phone}</p> : null}
-          </div>
-        </div>
-        {agent.bio && !org?.bio ? (
-          <p className="mt-4 text-sm leading-relaxed text-slate-600 line-clamp-3">{agent.bio}</p>
-        ) : null}
-      </div>
+      {usefulAddress ? (
+        <p className="mt-3 flex items-start gap-2 text-sm text-slate-500">
+          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#183E95]" />
+          <span>{org?.address}</span>
+        </p>
+      ) : null}
 
       <ContactActions phone={contactPhone} listingsHref={`/agents/${agent.id}`} />
     </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Button, Form, Input, message } from "antd";
 import {
   ArrowRight,
   Building2,
+  Camera,
   LayoutDashboard,
   Phone,
   Shield,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { getAgentPortalUrl } from "@/lib/portals";
 import { AuthLoadingScreen, useRequireAuth } from "@/hooks/useRequireAuth";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -21,6 +23,11 @@ function ProfilePageContent() {
   const { user, loading } = useRequireAuth("/login");
   const { updateProfile } = useAuth();
   const [form] = Form.useForm();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [clearAvatar, setClearAvatar] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -28,7 +35,16 @@ function ProfilePageContent() {
       first_name: user.first_name || "",
       last_name: user.last_name || "",
       email: user.email || "",
+      display_name: user.agent_profile?.display_name || "",
+      title: user.agent_profile?.title || "",
+      bio: user.agent_profile?.bio || "",
     });
+    setPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    setAvatarFile(null);
+    setClearAvatar(false);
   }, [user, form]);
 
   if (loading || !user) {
@@ -45,14 +61,53 @@ function ProfilePageContent() {
         ? "Агент"
         : "Хувь хүн";
 
-  const onFinish = async (values: { first_name: string; last_name: string; email: string }) => {
+  const avatarUrl = clearAvatar
+    ? null
+    : preview || user.avatar_url || agent?.avatar_url || null;
+
+  const onPickAvatar = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      message.error("Зөвхөн зураг сонгоно уу");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("Зураг 5MB-аас бага байх ёстой");
+      return;
+    }
+    setAvatarFile(file);
+    setClearAvatar(false);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const onFinish = async (values: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    display_name?: string;
+    title?: string;
+    bio?: string;
+  }) => {
+    setSaving(true);
     try {
       await updateProfile({
         first_name: values.first_name.trim(),
         last_name: values.last_name.trim(),
         email: values.email.trim(),
+        ...(isIndividualAgent
+          ? {
+              display_name: (values.display_name || "").trim(),
+              title: (values.title || "").trim(),
+              bio: (values.bio || "").trim(),
+            }
+          : {}),
+        avatar: avatarFile || undefined,
+        clear_avatar: clearAvatar && !avatarFile,
       });
       message.success("Профайл хадгалагдлаа");
+      setAvatarFile(null);
+      setPreview(null);
+      setClearAvatar(false);
     } catch (err: unknown) {
       const data =
         err && typeof err === "object" && "response" in err
@@ -64,6 +119,8 @@ function ProfilePageContent() {
           .flat()
           .find((m) => typeof m === "string");
       message.error(typeof firstError === "string" ? firstError : "Хадгалахад алдаа гарлаа");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -73,13 +130,33 @@ function ProfilePageContent() {
         <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm">
           <div className="bg-gradient-to-br from-[#183E95] to-[#1d4ed8] px-6 py-8 text-white md:px-8">
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/15 ring-2 ring-white/25">
-                {user.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-8 w-8" />
-                )}
+              <div className="relative">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/15 ring-2 ring-white/25">
+                  {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-8 w-8" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-amber-400 text-amber-950 shadow transition hover:bg-amber-300"
+                  aria-label="Профайл зураг"
+                >
+                  <Camera className="h-3.5 w-3.5" />
+                </button>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    onPickAvatar(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-medium text-white/80">{roleLabel}</p>
@@ -90,6 +167,26 @@ function ProfilePageContent() {
                   <Phone className="h-3.5 w-3.5" />
                   {user.phone || "—"}
                 </p>
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="mt-2 text-xs font-semibold text-white/90 underline-offset-2 hover:underline"
+                >
+                  Зураг солих
+                </button>
+                {avatarUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarFile(null);
+                      setPreview(null);
+                      setClearAvatar(true);
+                    }}
+                    className="ml-3 mt-2 text-xs font-medium text-white/70 hover:text-white"
+                  >
+                    Устгах
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
@@ -129,10 +226,24 @@ function ProfilePageContent() {
                   />
                   <p className="mt-1 text-xs text-slate-400">OTP нэвтрэлтээр баталгаажсан</p>
                 </Form.Item>
+                {isIndividualAgent ? (
+                  <>
+                    <Form.Item name="display_name" label="Агентын нэршил">
+                      <Input size="large" className="!rounded-xl" />
+                    </Form.Item>
+                    <Form.Item name="title" label="Албан тушаал">
+                      <Input size="large" className="!rounded-xl" placeholder="Senior broker" />
+                    </Form.Item>
+                    <Form.Item name="bio" label="Танилцуулга">
+                      <Input.TextArea rows={3} className="!rounded-xl" maxLength={1000} />
+                    </Form.Item>
+                  </>
+                ) : null}
                 <Button
                   type="primary"
                   htmlType="submit"
                   size="large"
+                  loading={saving}
                   className="!h-11 !rounded-xl !font-semibold"
                 >
                   Хадгалах
@@ -151,12 +262,6 @@ function ProfilePageContent() {
                   Агент профайл
                 </h2>
                 <dl className="mt-4 space-y-2 text-sm">
-                  {agent.display_name ? (
-                    <div className="flex justify-between gap-4">
-                      <dt className="text-slate-500">Нэршил</dt>
-                      <dd className="font-medium text-slate-900">{agent.display_name}</dd>
-                    </div>
-                  ) : null}
                   {agent.organization_name ? (
                     <div className="flex justify-between gap-4">
                       <dt className="text-slate-500">Компани</dt>
@@ -170,14 +275,25 @@ function ProfilePageContent() {
                     </div>
                   ) : null}
                 </dl>
-                {isIndividualAgent && agent.id ? (
-                  <Link
-                    href={`/agents/${agent.id}`}
-                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#183E95] hover:underline"
-                  >
-                    Нийтэд харагдах профайл
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                {isIndividualAgent ? (
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link
+                      href={getAgentPortalUrl("/profile")}
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#183E95] hover:underline"
+                    >
+                      Агент портал профайл
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                    {agent.id ? (
+                      <Link
+                        href={`/agents/${agent.id}`}
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#183E95] hover:underline"
+                      >
+                        Нийтэд харагдах
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : null}
+                  </div>
                 ) : null}
               </section>
             ) : null}

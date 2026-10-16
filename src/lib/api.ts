@@ -404,11 +404,34 @@ export interface ProfileUpdatePayload {
   profile_type?: "owner" | "agent";
   display_name?: string;
   title?: string;
+  bio?: string;
   invite_code?: string;
+  avatar?: File | null;
+  clear_avatar?: boolean;
 }
 
 export async function updateMe(payload: ProfileUpdatePayload) {
-  const { data } = await api.patch<User>("/auth/me/", payload);
+  const needsMultipart =
+    payload.avatar instanceof File || Boolean(payload.clear_avatar);
+
+  if (needsMultipart) {
+    const formData = new FormData();
+    if (payload.first_name !== undefined) formData.append("first_name", payload.first_name);
+    if (payload.last_name !== undefined) formData.append("last_name", payload.last_name);
+    if (payload.email !== undefined) formData.append("email", payload.email);
+    if (payload.profile_type !== undefined) formData.append("profile_type", payload.profile_type);
+    if (payload.display_name !== undefined) formData.append("display_name", payload.display_name);
+    if (payload.title !== undefined) formData.append("title", payload.title);
+    if (payload.bio !== undefined) formData.append("bio", payload.bio);
+    if (payload.invite_code !== undefined) formData.append("invite_code", payload.invite_code);
+    if (payload.clear_avatar) formData.append("clear_avatar", "true");
+    if (payload.avatar instanceof File) formData.append("avatar", payload.avatar);
+    const { data } = await api.patch<User>("/auth/me/", formData);
+    return data;
+  }
+
+  const { avatar: _a, clear_avatar: _c, ...json } = payload;
+  const { data } = await api.patch<User>("/auth/me/", json);
   return data;
 }
 
