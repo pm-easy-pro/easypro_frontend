@@ -64,6 +64,42 @@ function formatContractRange(start?: string | null, end?: string | null) {
   return start || end;
 }
 
+function DescriptionBlock({ property }: { property: Property }) {
+  if (!property.description?.trim()) return null;
+  return (
+    <div className="border-t border-slate-100 pt-6">
+      <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+        Тайлбар
+      </h3>
+      <p className="whitespace-pre-line text-[15px] leading-7 text-slate-600">
+        {property.description}
+      </p>
+    </div>
+  );
+}
+
+function AliasesBlock({ property }: { property: Property }) {
+  const aliases = property.unofficial_addresses || [];
+  if (!aliases.length) return null;
+  return (
+    <div className="border-t border-slate-100 pt-6">
+      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+        Байршлын бусад нэршил
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {aliases.map((addr) => (
+          <span
+            key={addr}
+            className="rounded-lg bg-slate-50 px-3 py-1.5 text-sm text-slate-600 ring-1 ring-slate-200/80"
+          >
+            {addr}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function PropertySpecifications({ property }: PropertySpecificationsProps) {
   const floorLabel = formatFloor(property.floor, property.total_floor);
   const isApartment = property.property_type === "apartment";
@@ -113,12 +149,14 @@ export function PropertySpecifications({ property }: PropertySpecificationsProps
     ];
 
     return (
-      <div className="space-y-8 rounded-2xl border border-slate-200/80 bg-white px-5 py-6 md:px-6">
+      <div className="space-y-6 rounded-2xl border border-slate-200/80 bg-white px-5 py-6 md:px-6">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 md:text-xl">Газрын мэдээлэл</h2>
+          <h2 className="text-lg font-bold text-slate-900 md:text-xl">Дэлгэрэнгүй мэдээлэл</h2>
           <p className="mt-1 text-sm text-slate-500">Талбай, эрх, ашиглалтын зориулалт</p>
         </div>
         <SpecSection title="Газар" items={landItems} />
+        <DescriptionBlock property={property} />
+        <AliasesBlock property={property} />
       </div>
     );
   }
@@ -207,7 +245,7 @@ export function PropertySpecifications({ property }: PropertySpecificationsProps
   ];
 
   return (
-    <div className="space-y-8 rounded-2xl border border-slate-200/80 bg-white px-5 py-6 md:px-6">
+    <div className="space-y-6 rounded-2xl border border-slate-200/80 bg-white px-5 py-6 md:px-6">
       <div>
         <h2 className="text-lg font-bold text-slate-900 md:text-xl">Дэлгэрэнгүй мэдээлэл</h2>
         <p className="mt-1 text-sm text-slate-500">Барилга, орон сууц, тохь тух</p>
@@ -219,6 +257,8 @@ export function PropertySpecifications({ property }: PropertySpecificationsProps
         )}
         <SpecSection title="Тохь тух" items={amenityItems} />
       </div>
+      <DescriptionBlock property={property} />
+      <AliasesBlock property={property} />
     </div>
   );
 }

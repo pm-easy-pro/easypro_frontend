@@ -58,33 +58,6 @@ export default async function PropertyDetailPage({ params }: PageProps) {
 
               <PropertyDetailHeader property={property} />
               <PropertyQuickStats property={property} />
-
-              {property.description ? (
-                <section>
-                  <h2 className="text-lg font-bold text-slate-900 md:text-xl">Тайлбар</h2>
-                  <p className="mt-3 whitespace-pre-line text-[15px] leading-7 text-slate-600">
-                    {property.description}
-                  </p>
-                  {property.unofficial_addresses?.length > 0 && (
-                    <div className="mt-5 border-t border-slate-200/80 pt-4">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-                        Байршлын бусад нэршил
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {property.unofficial_addresses.map((addr) => (
-                          <span
-                            key={addr}
-                            className="rounded-lg bg-white px-3 py-1.5 text-sm text-slate-600 ring-1 ring-slate-200/80"
-                          >
-                            {addr}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </section>
-              ) : null}
-
               <PropertySpecifications property={property} />
 
               <NearbyAmenities
